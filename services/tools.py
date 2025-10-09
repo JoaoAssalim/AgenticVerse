@@ -1,78 +1,32 @@
-
 import os
 
-from dotenv import load_dotenv
 from typing import Optional
 from pathlib import Path
 
-from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.ollama import OllamaProvider
+from pydantic_ai.common_tools.tavily import tavily_search_tool
 from pydantic_ai.tools import Tool
 
-from pydantic_ai.common_tools.tavily import tavily_search_tool
 
-load_dotenv()
-
-class AgentModel:
-    def __init__(self):
-        self.model_name = os.getenv("OLLAMA_MODEL")
-        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL")
-        self.agent_tools = AgentTools()
-    
-    def get_ollama_model(self):
-        return OpenAIChatModel(
-            model_name=self.model_name,
-            provider=OllamaProvider(base_url=self.ollama_base_url),
-        )
-    
-    def build_agent(self):
-        model = self.get_ollama_model()
-        return Agent(
-            model, 
-            tools=self.agent_tools.get_tools(),
-            system_prompt="""You are a helpful AI assistant with access to tools. 
-            
-            IMPORTANT: When users ask you to perform tasks, you should USE YOUR TOOLS to complete them, not write code or provide instructions.
-            
-            Available tools:
-            - tavily_search: Search the web for real-time information
-            - create_text_document: Create text files with llm-generated content
-            
-            CRITICAL: When using create_text_document, you MUST provide actual content in the 'content' parameter. 
-            Do NOT pass empty strings or null values. The content should be the actual text you want to save.
-            
-            For example, if a user asks you to "search for news and create a file", you should:
-            1. Use tavily_search to find the information
-            2. Take the search results and format them into readable text
-            3. Use create_text_document with the formatted text as the content parameter
-            4. Provide a summary of what you found and created
-            
-            Always use your tools to complete tasks directly and ensure all parameters have meaningful values."""
-        )
-    
-    def invoke(self, prompt: str):
-        agent = self.build_agent()
-        response = agent.run_sync(prompt)
-        return response.output
-    
 class AgentTools:
     def __init__(self):
         self.tavily_search_api_key = os.getenv("TAVILY_API_KEY")
         self.output_dir = Path("output")
         self.output_dir.mkdir(exist_ok=True)
+
     
-    def get_tools(self):
-        return [
-            self.tavily_search(),
-            self.create_text_document_tool()
-        ]
+    # ================================
+    # Web Search Tools
+    # ================================
     
     def tavily_search(self):
         """
         Search the web for information.
         """
         return tavily_search_tool(self.tavily_search_api_key)
+
+    # ================================
+    # Document Handling Tools
+    # ================================
 
     def create_text_document_tool(self):
         """
