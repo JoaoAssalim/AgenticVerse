@@ -5,9 +5,9 @@ from services.agents.document_handler_agent import DocumentHandlerAgent
 from pydantic_ai.tools import Tool
 
 class OrchestratorAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, params: dict):
         super().__init__()
-
+        self.params = params
         self.agent = self.build_agent(
             tools=[
                 self.web_search_tool(),
@@ -35,7 +35,7 @@ Help the user with whatever they need."""
         )
 
     def web_search_tool(self):
-        search_agent = WebSearchAgent()
+        search_agent = WebSearchAgent(self.params)
 
         @Tool
         def call_web_search_agent(query: str) -> str:

@@ -2,8 +2,9 @@ from services.agents.base_agent import BaseAgent
 from services.tools import AgentTools
 
 class DocumentHandlerAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, params: dict):
         super().__init__()
+        self.params = params
         self.agent_tools = AgentTools()
         self.agent = self.build_agent(
             tools=[

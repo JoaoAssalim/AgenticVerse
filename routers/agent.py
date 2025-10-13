@@ -11,6 +11,6 @@ router = APIRouter(
 @router.post("/invoke")
 def invoke_agent(request: AgentRequest):
 
-    agent = OrchestratorAgent()
+    agent = OrchestratorAgent(request.params)
     response = agent.execute(request.prompt)
     return {"message": response}
