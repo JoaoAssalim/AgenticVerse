@@ -1,69 +1,81 @@
+import logging
+
 from services.agents.base_agent import BaseAgent
 from services.tools import AgentTools
+
+from pydantic_ai.tools import Tool
+
+
+logger = logging.getLogger(__name__)
 
 class DocumentHandlerAgent(BaseAgent):
     def __init__(self, params: dict):
         super().__init__()
         self.params = params
         self.agent_tools = AgentTools()
+        
         self.agent = self.build_agent(
             tools=[
                 self.agent_tools.create_text_document_tool(),
+                self.agent_tools.create_pdf_document_tool(),
             ],
-            system_prompt="""You are a Document Handler Agent that creates text files. Your job is to save content to text documents.
+            system_prompt="""You are a Document Handler Agent that creates text and PDF files.
 
-## CORE FUNCTION:
-Create text documents using the create_text_document tool when users want to save content to files.
+## YOUR TOOLS:
+1. **create_text_document**: Creates .txt files
+2. **create_pdf_document**: Creates .pdf files
+
+## IMPORTANT - FORMAT SELECTION:
+- If query contains "pdf" or "[FORMAT: PDF]" → Use create_pdf_document
+- If query contains "txt" or "text" or "[FORMAT: TEXT]" → Use create_text_document
+- For structured/professional documents → Default to create_pdf_document
+- For simple notes → Use create_text_document
+
+## CONTENT GENERATION:
+**ALWAYS generate content in MARKDOWN format**, regardless of output format.
+
+Use proper markdown syntax:
+- Headers: # for h1, ## for h2, ### for h3, etc.
+- Bold: **text**
+- Italic: *text*
+- Lists: - for bullets, 1. for numbered
+- Code blocks: ```language
+- Links: [text](url)
+- Quotes: > text
+- Horizontal rules: ---
+
+Example markdown content structure:
+```
+# Main Title
+
+## Introduction
+This is the introduction paragraph with **important points** in bold.
+
+## Section 1
+Content with proper structure:
+- Point one
+- Point two
+- Point three
+
+### Subsection 1.1
+More detailed information here.
+
+## Conclusion
+Final thoughts and *key takeaways*.
+```
 
 ## BEHAVIOR:
-- Use create_text_document tool for any file creation request
-- Format content clearly with proper structure
-- Choose descriptive filenames
-- Organize content with headers and sections when helpful
+- Detect format from query keywords or [FORMAT: XXX] prefix
+- ALWAYS generate well-structured content in MARKDOWN format (NEVER empty)
+- Choose descriptive filenames with underscores
+- Pass the markdown content to the appropriate tool
+- Return the success message from the tool
 
 ## FILENAME GUIDELINES:
-- Use descriptive names that indicate content
-- Include dates when relevant (YYYY-MM-DD)
+- Descriptive names indicating content
 - Use underscores instead of spaces
-- Add .txt extension (tool handles this automatically)
+- Extension is added automatically
+- Example: "RAG_e_Tecnicas_Avancadas_IA"
 
-## CONTENT FORMATTING:
-- Use headers (##, ###) for organization
-- Add proper spacing between sections
-- Use bullet points for lists
-- Include timestamps when relevant
-
-## IMPORTANT:
-- Always provide actual content - never create empty files
-- Use the tool for all file creation requests
-- Be helpful and create well-structured documents
-
-Create text documents as requested."""
+ALWAYS generate complete, meaningful MARKDOWN content and use the correct tool for the format requested."""
         )
-
-    def create_text_document_tool(self):
-        from pydantic_ai.tools import Tool
-        
-        @Tool
-        def create_text_document(filename: str, content: str, directory: str = None) -> str:
-            """
-            Create a text document with the specified content.
-            
-            Args:
-                filename: Name of the file to create (should include .txt extension)
-                content: The text content to write to the file
-                directory: Optional subdirectory within the output folder
-                
-            Returns:
-                Success message with file path or error message
-            """
-            print(f"Document creation tool invoked with filename: {filename}")
-            try:
-                response = self.agent.run_sync(f"Create a text document with filename '{filename}' and content: {content}. Directory: {directory}")
-                return response.output
-            except Exception as e:
-                return f"DOCUMENT_ERROR: Failed to create document '{filename}': {str(e)}"
-        return create_text_document
-
-    def invoke(self, prompt: str):
-        return super().execute(self.agent, prompt)

@@ -2,3 +2,5 @@ pydantic-ai
 pydantic
 fastapi[standard]
 pydantic-ai-slim[tavily]
+markdown-pdf
+markdown
