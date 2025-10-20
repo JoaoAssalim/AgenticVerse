@@ -4,3 +4,5 @@ fastapi[standard]
 pydantic-ai-slim[tavily]
 markdown-pdf
 markdown
+slack-sdk
+certifi
