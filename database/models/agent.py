@@ -1,19 +1,12 @@
-from pydantic import BaseModel
 from typing import List, Optional
 from sqlmodel import Field, JSON
 from sqlalchemy import Column
 
-from sqlmodel import SQLModel
+from database.models.base import BaseModel
 
+class AgentModel(BaseModel, table=True):
+    __tablename__ = "agents"
 
-class AgentRequest(BaseModel):
-    prompt: str
-    params: dict = {
-        "provider": "openai",
-    }
-
-
-class AgentBaseModel(SQLModel):
     name: str = Field(nullable=False)
     description: str = Field(nullable=False)
     system_prompt: str = Field(nullable=False)

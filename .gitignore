@@ -5,3 +5,4 @@ venv/
 output/
 
 .DS_Store
+*.db
