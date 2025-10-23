@@ -9,3 +9,4 @@ certifi
 sqlmodel
 alembic
 python-dotenv
+pwdlib[argon2]
