@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from core.api.agents import AgentsAPIView
 from database.models.agent import AgentModel
-from models.agent import AgentRequest, AgentBaseModel
+from models.agent import AgentRequest, AgentBaseModel, AgentUpdateModel
 from services.agent_orchestrator import OrchestratorAgent
 
 router = APIRouter(
@@ -13,7 +13,6 @@ router = APIRouter(
 
 @router.post("/invoke")
 def invoke_agent(request: AgentRequest):
-
     agent = OrchestratorAgent(request.params)
     response = agent.execute(request.prompt)
     return {"message": response}
@@ -25,15 +24,13 @@ def create_agent(agent: AgentBaseModel):
     return AgentsAPIView().create_agent(agent_model)
 
 @router.patch("/update/{agent_id}")
-def update_agent(agent_id: str, agent: AgentBaseModel):
-    agent_model = agent.model_dump_json()
-    print(agent_model)
+def update_agent(agent_id: str, agent: AgentUpdateModel):
+    agent_model = agent.model_dump_json(exclude_unset=True)
     agent_model = AgentModel.model_validate_json(agent_model)
     return AgentsAPIView().update_agent(agent_id, agent_model)
 
 @router.get("/get/{agent_id}")
 def get_agent(agent_id: str):
-    print(agent_id)
     return AgentsAPIView().get_agent(agent_id)
 
 @router.get("/get-all")

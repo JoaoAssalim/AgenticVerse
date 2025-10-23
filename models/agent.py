@@ -19,3 +19,10 @@ class AgentBaseModel(SQLModel):
     system_prompt: str = Field(nullable=False)
     tools: List[str] = Field(sa_column=Column(JSON, nullable=False))
     provider: Optional[str] = Field(nullable=True)
+
+class AgentUpdateModel(SQLModel):
+    name: str | None = None
+    description: str | None = None
+    system_prompt: str | None = None
+    tools: List[str] | None = None
+    provider: str | None = None
