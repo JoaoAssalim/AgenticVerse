@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlmodel import Session, select
 from fastapi import HTTPException
@@ -42,6 +43,7 @@ class UsersAPIView:
                 raise HTTPException(status_code=404, detail="User not found")
                 
             user_data = user.model_dump(exclude_unset=True)
+            user_data["updated_at"] = datetime.now()
             user_db.sqlmodel_update(user_data)
             session.add(user_db)
             session.commit()

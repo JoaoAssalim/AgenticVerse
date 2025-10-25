@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlmodel import Session, select
 from fastapi import HTTPException
@@ -37,6 +38,7 @@ class AgentsAPIView:
                 raise HTTPException(status_code=404, detail="Agent not found")
             
             agent_data = agent.model_dump(exclude_unset=True)
+            agent_data["updated_at"] = datetime.now()
             agent_db.sqlmodel_update(agent_data)
             session.add(agent_db)
             session.commit()
