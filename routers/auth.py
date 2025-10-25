@@ -1,6 +1,8 @@
-from typing import Annotated
-from fastapi import Depends, APIRouter
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, HTTPException
+
+from models.users import UserLoginModel
+from core.api.users import UsersAPIView
+from core.auth.utils import verify_password
 
 router = APIRouter(
     prefix="/auth",
@@ -8,8 +10,12 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+@router.post("/login")
+async def login(user: UserLoginModel):
+    user_db = UsersAPIView().get_user_by_email(user.email)
 
-@router.post("/token")
-async def login_for_access_token(token: Annotated[str, Depends(oauth2_scheme)]):
-    return {"token": token}
+    if not verify_password(user.password, user_db.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    
+    return {"api_key": user_db.api_key}

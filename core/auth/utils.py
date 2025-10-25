@@ -1,9 +1,7 @@
-from pwdlib import PasswordHash
-
-password_hash = PasswordHash.recommended()
+import hashlib
 
 def hash_password(password: str) -> str:
-    return password_hash.hash(password)
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    return password_hash.verify(hashed_password, password)
+    return hash_password(password) == hashed_password

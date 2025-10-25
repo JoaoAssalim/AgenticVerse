@@ -13,6 +13,9 @@ class UsersAPIView:
         pass
 
     def create_user(self, user: UserModel):
+        if user.password and len(user.password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+        
         user.password = hash_password(user.password)
         with Session(engine) as session:
             session.add(user)
@@ -23,6 +26,13 @@ class UsersAPIView:
     def get_user(self, user_id: str):
         with Session(engine) as session:
             user = session.get(UserModel, uuid.UUID(user_id))
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            return user
+        
+    def get_user_by_email(self, email: str):
+        with Session(engine) as session:
+            user = session.exec(select(UserModel).where(UserModel.email == email)).first()
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             return user

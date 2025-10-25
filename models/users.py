@@ -1,16 +1,18 @@
-from re import S
 from typing import Optional
-from sqlmodel import Field
-
-from sqlmodel import SQLModel
+from sqlmodel import Field, SQLModel
+from pydantic import EmailStr
 
 class UserBaseModel(SQLModel):
     name: str = Field(nullable=False)
-    email: str = Field(nullable=False)
+    email: EmailStr = Field(nullable=False)
+    password: str = Field(nullable=False)
+
+class UserLoginModel(SQLModel):
+    email: EmailStr = Field(nullable=False)
     password: str = Field(nullable=False)
 
 class UserUpdateModel(SQLModel):
-    name: Optional[str] | None = None
+    name: Optional[EmailStr] | None = None
     email: Optional[str] | None = None
     password: Optional[str] | None = None
 
