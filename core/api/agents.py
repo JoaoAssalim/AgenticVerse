@@ -37,7 +37,7 @@ class AgentsAPIView:
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
             
-            agent_data = agent.model_dump(exclude_unset=True)
+            agent_data = agent.model_dump(exclude_unset=True, exclude=["api_key"])
             agent_data["updated_at"] = datetime.now()
             agent_db.sqlmodel_update(agent_data)
             session.add(agent_db)

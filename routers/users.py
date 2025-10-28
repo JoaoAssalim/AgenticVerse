@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from core.api.users import UsersAPIView
 from database.models.users import UserModel
@@ -14,13 +14,19 @@ router = APIRouter(
 def create_user(user: UserBaseModel):
     user_model = user.model_dump_json(exclude_unset=True)
     user_model = UserModel.model_validate_json(user_model)
-    return UsersAPIView().create_user(user_model)
+    try:
+        return UsersAPIView().create_user(user_model)
+    except HTTPException as e:
+        raise e
 
 @router.patch("/update/{user_id}")
 def update_user(user_id: str, user: UserUpdateModel):
     user_model = user.model_dump_json(exclude_unset=True)
     user_model = UserModel.model_validate_json(user_model)
-    return UsersAPIView().update_user(user_id, user_model)
+    try:
+        return UsersAPIView().update_user(user_id, user_model)
+    except HTTPException as e:
+        raise e
 
 @router.get("/get/{user_id}")
 def get_user(user_id: str):

@@ -16,12 +16,20 @@ class UsersAPIView:
         if user.password and len(user.password) < 8:
             raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
         
+        if not self.validate_email_exists(user.email):
+            raise HTTPException(status_code=409, detail="Email already in use")
+        
         user.password = hash_password(user.password)
-        with Session(engine) as session:
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-            return user
+        
+        try:
+            with Session(engine) as session:
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+                return user
+        except Exception as e:
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error creating user: {e}")
         
     def get_user(self, user_id: str):
         with Session(engine) as session:
@@ -29,6 +37,13 @@ class UsersAPIView:
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             return user
+    
+    def validate_email_exists(self, email: str):
+        with Session(engine) as session:
+            user = session.exec(select(UserModel).where(UserModel.email == email)).first()
+            if user:
+                raise HTTPException(status_code=409, detail="Email already in use")
+            return True
         
     def get_user_by_email(self, email: str):
         with Session(engine) as session:
@@ -45,6 +60,9 @@ class UsersAPIView:
     def update_user(self, user_id: str, user: UserModel):
         if user.password:
             user.password = hash_password(user.password)
+        
+        if self.get_user_by_email(user.email) and self.get_user_by_email(user.email).id != user_id:
+            raise HTTPException(status_code=409, detail="Email already in use")
 
         with Session(engine) as session:
             user_db = session.get(UserModel, uuid.UUID(user_id))

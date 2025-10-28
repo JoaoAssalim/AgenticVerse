@@ -72,5 +72,4 @@ class SlackController:
             return JSONResponse(content={"message": "OK"})
         
         except Exception as e:
-            print(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
