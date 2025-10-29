@@ -12,7 +12,7 @@ from pydantic_ai.tools import Tool
 class AgentTools:
     def __init__(self):
         self.tavily_search_api_key = os.getenv("TAVILY_API_KEY")
-        self.output_dir = Path("output")
+        self.output_dir = Path(os.getenv("OUTPUT_FILE_PATH"))
         self.output_dir.mkdir(exist_ok=True)
 
     

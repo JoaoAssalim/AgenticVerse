@@ -10,6 +10,8 @@ from pydantic_ai.providers.ollama import OllamaProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.tools import Tool
 
+from database.models.agent import AgentModel
+
 logger = logging.getLogger(__name__)
 
 load_dotenv()
@@ -37,10 +39,10 @@ class BaseAgent:
             provider=OpenAIProvider(api_key=self.openai_api_key),
         )
     
-    def build_agent(self, tools: list[Tool], system_prompt: str):
+    def build_agent(self, agent_obj: AgentModel, tools: list[Tool], system_prompt: str):
         logger.info(f"Building agent with tools: {tools} and system prompt: {system_prompt}")
 
-        if self.params.get("provider") == "openai":
+        if agent_obj.provider == "openai":
             model = self.get_openai_model()
         else:
             model = self.get_ollama_model()

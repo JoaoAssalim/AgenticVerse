@@ -7,10 +7,7 @@ from sqlmodel import SQLModel
 
 
 class AgentRequest(BaseModel):
-    prompt: str
-    params: dict = {
-        "provider": "openai",
-    }
+    message: str
 
 
 class AgentBaseModel(SQLModel):

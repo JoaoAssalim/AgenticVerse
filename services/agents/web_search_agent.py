@@ -2,16 +2,18 @@ import logging
 
 from services.agents.base_agent import BaseAgent
 from services.tools import AgentTools
+from database.models.agent import AgentModel
 
 from pydantic_ai.tools import Tool
 
 logger = logging.getLogger(__name__)
 
 class WebSearchQueryGeneratorAgent(BaseAgent):
-    def __init__(self, params: dict):
+    def __init__(self, agent_obj: AgentModel):
         super().__init__()
-        self.params = params
+        self.agent_obj = agent_obj
         self.agent = self.build_agent(
+            self.agent_obj,
             system_prompt="""You are a Web Search Query Improver Agent specialized in optimizing search queries for Tavily search engine. Your role is to receive a user's search query and transform it into an optimized, effective search query that will yield the best results.
 
 ## PRIMARY FUNCTION:
@@ -76,11 +78,12 @@ Always return ONLY the improved search query, nothing else. No explanations, no 
         )
 
 class WebSearchAgent(BaseAgent):
-    def __init__(self, params: dict):
+    def __init__(self, agent_obj: AgentModel):
         super().__init__()
-        self.params = params
         self.agent_tools = AgentTools()
+        self.agent_obj = agent_obj
         self.agent = self.build_agent(
+            self.agent_obj,
             tools=[
                 self.agent_tools.tavily_search(),
             ],
@@ -137,7 +140,7 @@ Return information in this structured format:
         def web_search(query: str) -> str:
             """Expose WebSearchAgent as a tool for other agents"""
             logger.info("Invoking Web Search Agent to improve query")
-            query_generator = WebSearchQueryGeneratorAgent(self.params)
+            query_generator = WebSearchQueryGeneratorAgent(self.agent_obj)
             new_query = query_generator.execute(query)
 
             return self.execute(new_query)

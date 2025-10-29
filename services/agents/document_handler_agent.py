@@ -2,19 +2,19 @@ import logging
 
 from services.agents.base_agent import BaseAgent
 from services.tools import AgentTools
-
-from pydantic_ai.tools import Tool
+from database.models.agent import AgentModel
 
 
 logger = logging.getLogger(__name__)
 
 class DocumentHandlerAgent(BaseAgent):
-    def __init__(self, params: dict):
+    def __init__(self, agent_obj: AgentModel):
         super().__init__()
-        self.params = params
+        self.agent_obj = agent_obj
         self.agent_tools = AgentTools()
         
         self.agent = self.build_agent(
+            self.agent_obj,
             tools=[
                 self.agent_tools.create_text_document_tool(),
                 self.agent_tools.create_pdf_document_tool(),
