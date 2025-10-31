@@ -17,33 +17,52 @@ router = APIRouter(
 
 @router.post("/invoke")
 def invoke_agent(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
-    agent_id = header.agent_id
-    agent = AgentsAPIView().get_agent(agent_id, user.id)
+    try:
+        agent_id = header.agent_id
+        agent = AgentsAPIView().get_agent(agent_id, user.id)
 
-    agent = OrchestratorAgent(agent)
-    response = agent.execute(request.message)
-    return {"message": response}
+        agent = OrchestratorAgent(agent)
+        response = agent.execute(request.message)
+        return {"message": response}
+    except Exception as e:
+        raise e
 
 @router.post("/create")
 def create_agent(agent: AgentBaseModel, user: UserModel = Depends(validate_api_key)):
-    agent_model = agent.model_dump_json()
-    agent_model = AgentModel.model_validate_json(agent_model)
-    return AgentsAPIView().create_agent(agent_model, user.id)
+    try:
+        agent_model = agent.model_dump_json()
+        agent_model = AgentModel.model_validate_json(agent_model)
+        return AgentsAPIView().create_agent(agent_model, user.id)
+    except Exception as e:
+        raise e
 
 @router.patch("/update/{agent_id}")
 def update_agent(agent_id: str, agent: AgentUpdateModel, user: UserModel = Depends(validate_api_key)):
-    agent_model = agent.model_dump_json(exclude_unset=True)
-    agent_model = AgentModel.model_validate_json(agent_model)
-    return AgentsAPIView().update_agent(agent_id, agent_model, user.id)
-
+    try:
+        agent_model = agent.model_dump_json(exclude_unset=True)
+        agent_model = AgentModel.model_validate_json(agent_model)
+        return AgentsAPIView().update_agent(agent_id, agent_model, user.id)
+    except Exception as e:
+        raise e
+    
 @router.get("/get/{agent_id}")
 def get_agent(agent_id: str, user: UserModel = Depends(validate_api_key)):
-    return AgentsAPIView().get_agent(agent_id, user.id)
+    try:
+        return AgentsAPIView().get_agent(agent_id, user.id)
+    except Exception as e:
+        raise e
 
 @router.get("/get-all")
 def get_all_agents(user: UserModel = Depends(validate_api_key)):
-    return AgentsAPIView().get_all_agents(user.id)
-
+    try:
+        return AgentsAPIView().get_all_agents(user.id)
+    except Exception as e:
+        raise e
+    
 @router.delete("/delete/{agent_id}")
 def delete_agent(agent_id: str, user: UserModel = Depends(validate_api_key)):
-    return AgentsAPIView().delete_agent(agent_id, user.id)
+    try:
+        return AgentsAPIView().delete_agent(agent_id, user.id)
+    except Exception as e:
+        raise e
+    
