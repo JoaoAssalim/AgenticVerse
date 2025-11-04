@@ -20,7 +20,8 @@ class AgentsAPIView:
                 session.refresh(agent)
                 return agent
         except Exception as e:
-            raise f"Error to create agent: {e}"
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to create agent: {e}")
         
     def get_agent(self, agent_id: str, user_id: str):
         try:
@@ -35,7 +36,8 @@ class AgentsAPIView:
                 
                 return agent_db
         except Exception as e:
-            raise f"Error to get agent {agent_id}: {e}"
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to get agent {agent_id}: {e}")
     
     def get_all_agents(self, user_id: str):
         try:
@@ -43,7 +45,8 @@ class AgentsAPIView:
                 agents = session.exec(select(AgentModel).where(AgentModel.user_id == user_id)).all()
                 return agents
         except Exception as e:
-            raise f"Error to get all agents: {e}"
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to get all agents: {e}")
     
     def update_agent(self, agent_id: str, agent: AgentModel, user_id: str):
         try:
@@ -64,7 +67,8 @@ class AgentsAPIView:
                 session.refresh(agent_db)
                 return agent_db
         except Exception as e:
-            raise f"Error to update agent {agent_id}: {e}"
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to update agent {agent_id}: {e}")
     
     def delete_agent(self, agent_id: str, user_id: str):
         try:
@@ -80,4 +84,5 @@ class AgentsAPIView:
                 session.delete(agent_db)
                 session.commit()
         except Exception as e:
-            raise f"Error to delete agent {agent_id}: {e}"
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to delete agent {agent_id}: {e}")
