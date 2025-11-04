@@ -37,3 +37,19 @@ def agent_test(user_test) -> AgentModel:
     yield agent_test
 
     AgentsAPIView().delete_agent(str(agent_test.id), user_test.id)
+
+@pytest.fixture
+def agent_data_creation():
+    return {
+        "name": "Agent Test 2",
+        "description": "Agent test 2",
+        "system_prompt": "Test agent 2",
+        "tools": [],
+        "provider": "openai"
+    } 
+
+@pytest.fixture
+def agent_data_update():
+    return {
+        "name": "Agent Test 3",
+    }  
