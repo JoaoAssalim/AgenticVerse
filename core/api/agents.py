@@ -46,7 +46,7 @@ class AgentsAPIView:
                 return agents
         except Exception as e:
             session.rollback()
-            raise HTTPException(status_code=500, detail=f"Error to get all agents: {e}")
+            raise HTTPException(status_code=500, detail=f"Error to get all agent: {e}")
     
     def update_agent(self, agent_id: str, agent: AgentModel, user_id: str):
         try:
@@ -56,7 +56,7 @@ class AgentsAPIView:
                 if not agent_db:
                     raise HTTPException(status_code=404, detail="Agent not found")
                 
-                if agent_db.user_id != uuid.UUID(user_id):
+                if agent_db.user_id != user_id:
                     raise HTTPException(status_code=403, detail="Forbidden")
                 
                 agent_data = agent.model_dump(exclude_unset=True, exclude=["api_key"])
