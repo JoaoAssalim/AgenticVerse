@@ -10,3 +10,5 @@ sqlmodel
 alembic
 python-dotenv
 pwdlib[argon2]
+pytest
+httpx
