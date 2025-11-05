@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: sqlite:///:memory:
+      DATABASE_URL: sqlite:///test.db
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
       with:
