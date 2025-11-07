@@ -31,7 +31,7 @@ class AgentsAPIView:
                 if not agent_db:
                     raise HTTPException(status_code=404, detail="Agent not found")
 
-                if agent_db.user_id != user_id:
+                if str(agent_db.user_id) != str(user_id):
                     raise HTTPException(status_code=403, detail="Forbidden")
                 
                 return agent_db
@@ -56,7 +56,7 @@ class AgentsAPIView:
                 if not agent_db:
                     raise HTTPException(status_code=404, detail="Agent not found")
                 
-                if agent_db.user_id != user_id:
+                if str(agent_db.user_id) != str(user_id):
                     raise HTTPException(status_code=403, detail="Forbidden")
                 
                 agent_data = agent.model_dump(exclude_unset=True, exclude=["api_key"])
@@ -78,7 +78,7 @@ class AgentsAPIView:
                 if not agent_db:
                     raise HTTPException(status_code=404, detail="Agent not found")
                 
-                if agent_db.user_id != user_id:
+                if str(agent_db.user_id) != str(user_id):
                     raise HTTPException(status_code=403, detail="Forbidden")
                 
                 session.delete(agent_db)

@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, Header
-from typing import Annotated
+import asyncio
 
-from core.api.agents import AgentsAPIView
-from database.models.agent import AgentModel
-from models.agent import AgentRequest, AgentBaseModel, AgentUpdateModel
-from services.agent_orchestrator import OrchestratorAgent
-from core.auth.auth import validate_api_key
+from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
+from typing import Annotated
+from celery.result import AsyncResult
+
+from core.api import AgentsAPIView
+from core.auth import validate_api_key
+from core.websocket import ConnectionManager
 from database.models.users import UserModel
-from models.headers import CommonHeaders
+from database.models.agent import AgentModel
+from models import AgentRequest, AgentBaseModel, AgentUpdateModel, CommonHeaders
 
 router = APIRouter(
     prefix="/agent",
@@ -15,11 +17,63 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/invoke")
-def invoke_agent(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
+manager = ConnectionManager()
+
+@router.websocket("/ws/get-agent-response/{user_id}")
+async def websocket_invoke_agent(websocket: WebSocket, user_id: str):
+    from celery_worker import execute_agent_task
+
+    await manager.connect(websocket)
     try:
-        agent_id = header.agent_id
-        agent = AgentsAPIView().get_agent(agent_id, user.id)
+        data = await websocket.receive_json()
+        task = execute_agent_task.delay(data.get("message"), user_id, data.get("agent_id"))
+
+        while True:
+            task_result = get_invoke_result(task.id)
+
+            await manager.send_personal_message(task_result, websocket)
+
+            if task_result.get("status") in ["completed", "failed"]:
+                await manager.disconnect(websocket)
+                break
+
+            await asyncio.sleep(1)
+            
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    except Exception as e:
+        await manager.send_personal_message({
+            "status": "error",
+            "message": str(e)
+        }, websocket)
+        await manager.disconnect(websocket)
+
+@router.get("/get-async-agent-result/{task_id}")
+def get_invoke_result(task_id: str):
+    task_result = AsyncResult(task_id)
+    if task_result.ready():
+        return {"task_id": task_id, "status": "completed", "result": task_result.result}
+    elif task_result.failed():
+        return {"task_id": task_id, "status": "failed"}
+    else:
+        return {"task_id": task_id, "status": "in progress"}
+
+@router.post("/execute/async")
+def invoke_agent_async(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
+    from celery_worker import execute_agent_task
+
+    try:
+        task = execute_agent_task.delay(request.message, user.id, header.agent_id)
+        return {"task_id": task.id}
+    except Exception as e:
+        raise e
+
+@router.post("/execute/sync")
+def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
+    from services.agent_orchestrator import OrchestratorAgent
+
+    try:
+        agent = AgentsAPIView().get_agent(header.agent_id, user.id)
 
         agent = OrchestratorAgent(agent)
         response = agent.execute(request.message)
