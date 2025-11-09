@@ -9,9 +9,15 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        await websocket.close()
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        try:
+            await websocket.close()
+        except:
+            pass
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_json(message)
-        # await websocket.send_text(message)
+        try:
+            await websocket.send_json(message)
+        except:
+            await self.disconnect(websocket)
