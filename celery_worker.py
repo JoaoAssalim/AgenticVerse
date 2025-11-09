@@ -23,4 +23,4 @@ def execute_agent_task(message, user_id, agent_id):
         response = agent.execute(message)
         return {"message": response}
     except Exception as e:
-        raise e
+        return {"error": str(e)}

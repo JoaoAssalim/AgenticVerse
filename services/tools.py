@@ -1,5 +1,5 @@
 import os
-import markdown
+import logging
 
 from typing import Optional
 from pathlib import Path
@@ -8,6 +8,7 @@ from markdown_pdf import MarkdownPdf, Section
 from pydantic_ai.common_tools.tavily import tavily_search_tool
 from pydantic_ai.tools import Tool
 
+logger = logging.Logger(__name__)
 
 class AgentTools:
     def __init__(self):
@@ -24,6 +25,7 @@ class AgentTools:
         """
         Search the web for information.
         """
+        logger.info("Using Tavily Search Tool")
         return tavily_search_tool(self.tavily_search_api_key)
 
     # ================================
@@ -58,6 +60,7 @@ class AgentTools:
             Returns:
                 Success message with file path
             """
+            logger.info("Using Text Document Handling Tool")
             try:
                 # Validate content
                 if not content or content.strip() == "":
@@ -83,6 +86,7 @@ class AgentTools:
                 return f"Successfully created text file: {file_path.absolute()}\nFile size: {len(content)} characters"
                 
             except Exception as e:
+                logger.error(f"Error to use text document tool: {e}")
                 return f"Error creating text file: {str(e)}"
         
         return create_text_document
@@ -117,6 +121,7 @@ class AgentTools:
             Returns:
                 Success message with file path
             """
+            logger.info("Using PDF Document Handling Tool")
             try:
                 # Validate content
                 if not content or content.strip() == "":
@@ -142,6 +147,7 @@ class AgentTools:
                 return f"Successfully created pdf file: {file_path.absolute()}\nFile size: {len(content)} characters"
                 
             except Exception as e:
+                logger.error(f"Error to use text document tool: {e}")
                 return f"Error creating pdf file: {str(e)}"
         
         return create_pdf_document

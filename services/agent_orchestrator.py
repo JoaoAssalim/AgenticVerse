@@ -1,11 +1,13 @@
-from routers import agent
+import logging
+
+from database.models.agent import AgentModel
 from services.agents.base_agent import BaseAgent
 from services.agents.web_search_agent import WebSearchAgent
 from services.agents.document_handler_agent import DocumentHandlerAgent
 
-from database.models.agent import AgentModel
-
 from pydantic_ai.tools import Tool
+
+logger = logging.Logger(__name__)
 
 class OrchestratorAgent(BaseAgent):
     def __init__(self, agent_obj: AgentModel):
@@ -47,6 +49,7 @@ USER_PROMPT: {agent_obj.system_prompt}"""
         )
 
     def web_search_tool(self):
+        logger.info("Calling WebSearch Tool")
         search_agent = WebSearchAgent(self.agent_obj)
 
         @Tool
@@ -56,6 +59,7 @@ USER_PROMPT: {agent_obj.system_prompt}"""
         return call_web_search_agent
     
     def document_handler_tool(self):
+        logger.info("Calling Document Handler Tool")
         document_handler_agent = DocumentHandlerAgent(self.agent_obj)
 
         @Tool
