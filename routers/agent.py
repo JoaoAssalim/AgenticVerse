@@ -5,7 +5,7 @@ from typing import Annotated
 from celery.result import AsyncResult
 
 from core.api import AgentsAPIView
-from core.auth import validate_api_key
+from core.auth import validate_api_key, validate_api_key_websocket
 from core.websocket import ConnectionManager
 from database.models.users import UserModel
 from database.models.agent import AgentModel
@@ -19,14 +19,23 @@ router = APIRouter(
 
 manager = ConnectionManager()
 
-@router.websocket("/ws/get-agent-response/{user_id}")
-async def websocket_invoke_agent(websocket: WebSocket, user_id: str):
+@router.websocket("/ws/execute")
+async def websocket_invoke_agent(websocket: WebSocket):
+
+    headers = websocket.headers
+    user = await validate_api_key_websocket(headers.get("x-api-key", None))
+
     from celery_worker import execute_agent_task
 
     await manager.connect(websocket)
     try:
         data = await websocket.receive_json()
-        task = execute_agent_task.delay(data.get("message"), user_id, data.get("agent_id"))
+        task = execute_agent_task.delay(data.get("message"), user.id, data.get("agent_id"))
+
+        await manager.send_personal_message({
+            "task_id": task.id,
+            "status": "started"
+        }, websocket)
 
         while True:
             task_result = get_invoke_result(task.id)
@@ -34,7 +43,6 @@ async def websocket_invoke_agent(websocket: WebSocket, user_id: str):
             await manager.send_personal_message(task_result, websocket)
 
             if task_result.get("status") in ["completed", "failed"]:
-                await manager.disconnect(websocket)
                 break
 
             await asyncio.sleep(1)
@@ -49,14 +57,14 @@ async def websocket_invoke_agent(websocket: WebSocket, user_id: str):
         await manager.disconnect(websocket)
 
 @router.get("/get-async-agent-result/{task_id}")
-def get_invoke_result(task_id: str):
+def get_invoke_result(task_id: str, user: UserModel = Depends(validate_api_key)):
     task_result = AsyncResult(task_id)
     if task_result.ready():
         return {"task_id": task_id, "status": "completed", "result": task_result.result}
     elif task_result.failed():
-        return {"task_id": task_id, "status": "failed"}
+        return {"task_id": task_id, "status": "failed", "result": {"message": "Agent cannot process your request."}}
     else:
-        return {"task_id": task_id, "status": "in progress"}
+        return {"task_id": task_id, "status": "in progress", "result": {"message": "Agent is processing your request..."}}
 
 @router.post("/execute/async")
 def invoke_agent_async(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
