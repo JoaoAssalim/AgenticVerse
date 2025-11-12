@@ -61,10 +61,17 @@ class BaseAgent:
     def execute(self, user_input: str, is_final_response: bool = False):
         try:
             logger.info(f"Executing agent: {self.agent}")
-            response = self.agent.run_sync(user_input)
-            agent_response = response.output
 
-            print(agent_response)
+            if self.agent_obj:
+                logger.info("Loading agent history")
+                agent_history = self.database_handler.load_history_json(self.agent_obj.user_id, self.agent_obj.id)
+                logger.info(f"Retrieved {len(agent_history)} messages from history")
+            else:
+                logger.info("No history loaded")
+                agent_history = []
+
+            response = self.agent.run_sync(user_input, message_history=agent_history)
+            agent_response = response.output
 
             if is_final_response:
                 agent_id = self.agent_obj.id

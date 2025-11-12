@@ -4,6 +4,12 @@ import logging
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from pydantic_ai.messages import (
+    ModelRequest,
+    ModelResponse,
+    TextPart,
+    UserPromptPart,
+)
 
 load_dotenv()
 
@@ -37,6 +43,34 @@ class DatabaseHandler:
                 "input": input, 
                 "output": output
             })
+        except Exception as e:
+            logger.error(f"Error to insert history do agent: {e}")
+            raise e
+     
+    def load_history_json(self, user_id: str, agent_id: str):
+        logger.info(f"Getting history for agent {agent_id}")
+        try:
+            history = self.collection_obj.find({
+                "agent_id": str(agent_id),
+                "user_id": str(user_id)
+            })
+
+            loaded_messages = []
+
+            for message in history:
+                
+                # User input
+                loaded_messages.append(
+                    ModelRequest(parts=[UserPromptPart(content=message.get("input"))]),
+                )
+
+                #Ai response
+                loaded_messages.append(
+                    ModelResponse(parts=[TextPart(content=message.get("output"))]),
+                )
+
+            return loaded_messages
+
         except Exception as e:
             logger.error(f"Error to insert history do agent: {e}")
             raise e
