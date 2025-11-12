@@ -141,7 +141,7 @@ Return information in this structured format:
             """Expose WebSearchAgent as a tool for other agents"""
             logger.info("Invoking Web Search Agent to improve query")
             query_generator = WebSearchQueryGeneratorAgent(self.agent_obj)
-            new_query = query_generator.execute(query)
+            new_query = query_generator.execute(query, is_final_response=False)
 
-            return self.execute(new_query)
+            return self.execute(new_query, is_final_response=False)
         return web_search

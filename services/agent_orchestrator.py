@@ -55,7 +55,7 @@ USER_PROMPT: {agent_obj.system_prompt}"""
         @Tool
         def call_web_search_agent(query: str) -> str:
             """Delegate a search task to the WebSearchAgent"""
-            return search_agent.execute(query)
+            return search_agent.execute(query, is_final_response=False)
         return call_web_search_agent
     
     def document_handler_tool(self):
@@ -65,5 +65,5 @@ USER_PROMPT: {agent_obj.system_prompt}"""
         @Tool
         def call_document_handler_agent(query: str):
             """Delegate a text document task to the DocumentHandlerAgent"""
-            return document_handler_agent.execute(query)
+            return document_handler_agent.execute(query, is_final_response=False)
         return call_document_handler_agent

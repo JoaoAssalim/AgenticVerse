@@ -16,3 +16,4 @@ websockets
 celery
 celery[redis]
 redis
+pymongo

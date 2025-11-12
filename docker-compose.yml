@@ -18,6 +18,7 @@ services:
       - "8000:80"
     depends_on:
       - redis
+      - mongodb
     restart: always
     env_file:
       - .env
@@ -40,3 +41,19 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       REDIS_URL: redis://redis:6379/2
+
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0-ubi9
+    restart: always
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=${MONGODB_USER}
+      - MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

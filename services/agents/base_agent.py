@@ -11,10 +11,14 @@ from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.tools import Tool
 
 from database.models.agent import AgentModel
+from core.database.mongo import DatabaseHandler
+from models import agent
 
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+MONGO_HISTORY_COLLECTION = os.getenv("MONGODB_HISTORY_COLLECTION")
 
 class BaseAgent:
     def __init__(self):
@@ -23,7 +27,7 @@ class BaseAgent:
         self.openai_model_name = os.getenv("OPENAI_MODEL")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.agent = None
-        self.params = {}
+        self.database_handler = DatabaseHandler(MONGO_HISTORY_COLLECTION)
     
     def get_ollama_model(self):
         logger.info(f"Getting ollama model: {self.ollama_model_name}")
@@ -54,8 +58,21 @@ class BaseAgent:
         )
         return self.agent
     
-    def execute(self, prompt: str):
-        logger.info(f"Executing agent: {self.agent}")
-        response = self.agent.run_sync(prompt)
-        return response.output
+    def execute(self, user_input: str, is_final_response: bool = False):
+        try:
+            logger.info(f"Executing agent: {self.agent}")
+            response = self.agent.run_sync(user_input)
+            agent_response = response.output
+
+            print(agent_response)
+
+            if is_final_response:
+                agent_id = self.agent_obj.id
+                user_id = self.agent_obj.user_id
+                self.database_handler.insert_history(user_input, agent_response, user_id, agent_id)
+
+            return agent_response
+        except Exception as e:
+            logger.error(f"Error to execute agent: {e}")
+            raise e
     

@@ -3,6 +3,7 @@ venv/
 .env
 
 output/
+data/
 
 .DS_Store
 *.db
