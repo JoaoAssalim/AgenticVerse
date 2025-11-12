@@ -58,11 +58,11 @@ class BaseAgent:
         )
         return self.agent
     
-    def execute(self, user_input: str, is_final_response: bool = False):
+    def execute(self, user_input: str, is_tool_agent: bool = False):
         try:
             logger.info(f"Executing agent: {self.agent}")
 
-            if self.agent_obj:
+            if not is_tool_agent:
                 logger.info("Loading agent history")
                 agent_history = self.database_handler.load_history_json(self.agent_obj.user_id, self.agent_obj.id)
                 logger.info(f"Retrieved {len(agent_history)} messages from history")
@@ -73,10 +73,8 @@ class BaseAgent:
             response = self.agent.run_sync(user_input, message_history=agent_history)
             agent_response = response.output
 
-            if is_final_response:
-                agent_id = self.agent_obj.id
-                user_id = self.agent_obj.user_id
-                self.database_handler.insert_history(user_input, agent_response, user_id, agent_id)
+            if not is_tool_agent:
+                self.database_handler.insert_history(user_input, agent_response, self.agent_obj.user_id, self.agent_obj.id)
 
             return agent_response
         except Exception as e:

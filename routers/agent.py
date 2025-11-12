@@ -109,7 +109,7 @@ def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, He
         agent = AgentsAPIView().get_agent(header.agent_id, user.id)
 
         agent = OrchestratorAgent(agent)
-        response = agent.execute(request.message, is_final_response=True)
+        response = agent.execute(request.message, is_tool_agent=False)
         return {"message": response}
     except Exception as e:
         logger.error(f"Error to execute agent synchronously: {e}")

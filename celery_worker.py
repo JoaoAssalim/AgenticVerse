@@ -20,7 +20,7 @@ def execute_agent_task(message, user_id, agent_id):
         agent = AgentsAPIView().get_agent(agent_id, user_id)
 
         agent = OrchestratorAgent(agent)
-        response = agent.execute(message, is_final_response=True)
+        response = agent.execute(message, is_tool_agent=False)
         return {"message": response}
     except Exception as e:
         return {"error": str(e)}
