@@ -54,6 +54,30 @@ services:
       - MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+    
+  opensearch:
+    restart: always
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - DISABLE_SECURITY_PLUGIN=${DISABLE_SECURITY_PLUGIN}
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits: 
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 9200:9200
+      - 9600:9600
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
 
 volumes:
   mongodb_data:
+  opensearch_data:
