@@ -1,15 +1,15 @@
 import asyncio
 import logging
 
-from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 from typing import Annotated
 from celery.result import AsyncResult
+from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 
 from core.api import AgentsAPIView
-from core.auth import validate_api_key, validate_api_key_websocket
-from core.websocket import ConnectionManager
 from database.models.users import UserModel
+from core.websocket import ConnectionManager
 from database.models.agent import AgentModel
+from core.auth import validate_api_key, validate_api_key_websocket
 from models import AgentRequest, AgentBaseModel, AgentUpdateModel, CommonHeaders
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ async def websocket_invoke_agent(websocket: WebSocket):
     finally:
         try:
             await manager.disconnect(websocket)
-        except:
+        except Exception:
             pass
 
 @router.get("/get-async-agent-result/{task_id}")
