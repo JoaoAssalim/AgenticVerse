@@ -1,26 +1,32 @@
 import uuid
 import logging
 from datetime import datetime
-from sqlmodel import Session, select
 from fastapi import HTTPException
+from sqlmodel import Session, select
 
 from database.config import engine
 from database.models.agent import AgentModel
+from core.database.opensearch import OpenSearchHandler
 
 logger = logging.Logger(__name__)
 class AgentsAPIView:
     def __init__(self):
-        pass
+        index = f"agentic-{str(uuid.uuid4())}"
+        self.opensearch_handler = OpenSearchHandler(index_name=index)
 
     def create_agent(self, agent: AgentModel, user_id: str):
         logger.info("Creating agent")
         try:
+            index_name = self.opensearch_handler.create_index()
+
+            agent.opensearch_index = index_name
             agent.user_id = user_id
             with Session(engine) as session:
                 session.add(agent)
                 session.commit()
                 session.refresh(agent)
                 return agent
+            
         except Exception as e:
             logger.error(f"Error to create agent: {e}")
             session.rollback()
@@ -41,6 +47,9 @@ class AgentsAPIView:
                     raise HTTPException(status_code=403, detail="Forbidden")
                 
                 return agent_db
+            
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to get agent: {e}")
             session.rollback()
@@ -52,6 +61,7 @@ class AgentsAPIView:
             with Session(engine) as session:
                 agents = session.exec(select(AgentModel).where(AgentModel.user_id == user_id)).all()
                 return agents
+            
         except Exception as e:
             logger.error(f"Error to get all agents: {e}")
             session.rollback()
@@ -78,6 +88,9 @@ class AgentsAPIView:
                 session.commit()
                 session.refresh(agent_db)
                 return agent_db
+            
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to update agent: {e}")
             session.rollback()
@@ -94,9 +107,14 @@ class AgentsAPIView:
                 
                 if str(agent_db.user_id) != str(user_id):
                     raise HTTPException(status_code=403, detail="Forbidden")
+
+                self.opensearch_handler.delete_index(agent_db.opensearch_index)
                 
                 session.delete(agent_db)
                 session.commit()
+
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to delete agent: {e}")
             session.rollback()

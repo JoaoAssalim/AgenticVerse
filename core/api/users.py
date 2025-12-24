@@ -2,12 +2,12 @@ import uuid
 import logging
 
 from datetime import datetime
-from sqlmodel import Session, select
 from fastapi import HTTPException
+from sqlmodel import Session, select
 
 from database.config import engine
-from database.models.users import UserModel
 from core.auth.utils import hash_password
+from database.models.users import UserModel
 
 logger = logging.Logger(__name__)
 
@@ -34,6 +34,8 @@ class UsersAPIView:
                 session.commit()
                 session.refresh(user)
                 return user
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to create user: {e}")
             session.rollback()
@@ -47,6 +49,8 @@ class UsersAPIView:
                 if not user:
                     raise HTTPException(status_code=404, detail="User not found")
                 return user
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to get user: {e}")
             session.rollback()
@@ -61,6 +65,8 @@ class UsersAPIView:
                     logger.error("User email already in use")
                     raise HTTPException(status_code=409, detail="Email already in use")
                 return True
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to validate email: {e}")
             session.rollback()
@@ -72,9 +78,11 @@ class UsersAPIView:
             with Session(engine) as session:
                 user = session.exec(select(UserModel).where(UserModel.email == email)).first()
                 if not user:
-                    logger.error(f"User not found")
+                    logger.error("User not found")
                     raise HTTPException(status_code=404, detail="User not found")
                 return user
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to get user by email: {e}")
             session.rollback()
@@ -114,6 +122,8 @@ class UsersAPIView:
                 session.commit()
                 session.refresh(user_db)
                 return user_db
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error to update user: {e}")
             session.rollback()
