@@ -17,3 +17,10 @@ celery
 celery[redis]
 redis
 pymongo
+opensearch-py
+sentence-transformers
+opensearch-py 
+langchain-community
+langchain-docling
+langchain-huggingface
+pypdf
