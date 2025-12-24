@@ -11,6 +11,7 @@ class AgentModel(BaseModel, table=True):
     name: str = Field(nullable=False)
     description: str = Field(nullable=False)
     system_prompt: str = Field(nullable=False)
+    opensearch_index: str = Field(nullable=True)
     tools: List[str] = Field(sa_column=Column(JSON, nullable=False))
     provider: Optional[str] = Field(nullable=True)
     user_id: uuid.UUID = ForeignKey("users.id")
