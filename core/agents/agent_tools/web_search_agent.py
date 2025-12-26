@@ -3,9 +3,8 @@ import logging
 from pydantic_ai import RunContext
 
 from database.models.agent import AgentModel
-from core.agents.base_agent import BaseAgent
-from core.agents.base_agent import AgentDeps
-from core.agents.agent_tools.tools import AgentTools
+from core.agents import BaseAgent, AgentDeps
+from core.agents.agent_tools import AgentTools
 
 
 logger = logging.getLogger(__name__)

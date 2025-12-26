@@ -4,10 +4,10 @@ from celery import Celery
 from dotenv import load_dotenv
 from pydantic_ai import RunContext
 
+from core.agents import AgentDeps
 from core.api import AgentsAPIView
-from core.agents.base_agent import AgentDeps
+from core.agents import OrchestratorAgent
 from core.database.mongo import DatabaseHandler
-from core.agents.agent_orchestrator import OrchestratorAgent
 
 load_dotenv()
 

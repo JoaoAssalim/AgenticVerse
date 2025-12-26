@@ -1,8 +1,8 @@
 import logging
 
+from core.agents import BaseAgent
 from database.models.agent import AgentModel
-from core.agents.base_agent import BaseAgent
-from core.agents.agent_tools.tools import AgentTools
+from core.agents.agent_tools import AgentTools
 
 
 logger = logging.getLogger(__name__)

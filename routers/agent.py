@@ -6,9 +6,9 @@ from typing import Annotated
 from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 
+from core.agents import AgentDeps
 from core.api import AgentsAPIView
 from database.models.users import UserModel
-from core.agents.base_agent import AgentDeps
 from core.websocket import ConnectionManager
 from database.models.agent import AgentModel
 from core.database.mongo import DatabaseHandler
@@ -108,7 +108,7 @@ def invoke_agent_async(request: AgentRequest, header: Annotated[CommonHeaders, H
 @router.post("/execute/sync")
 def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
     logger.info(f"Executing agent ({header.agent_id}) synchronously")
-    from core.agents.agent_orchestrator import OrchestratorAgent
+    from core.agents import OrchestratorAgent
 
     try:
         agent = AgentsAPIView().get_agent(header.agent_id, user.id)

@@ -1,12 +1,12 @@
 import os
 import logging
 
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 from markdown_pdf import MarkdownPdf, Section
 
-from pydantic_ai.common_tools.tavily import tavily_search_tool
 from pydantic_ai.tools import Tool
+from pydantic_ai.common_tools.tavily import tavily_search_tool
 
 logger = logging.Logger(__name__)
 
@@ -64,7 +64,7 @@ class AgentTools:
             try:
                 # Validate content
                 if not content or content.strip() == "":
-                    return f"Error: Content cannot be empty. Please provide actual text content to write to the file."
+                    return "Error: Content cannot be empty. Please provide actual text content to write to the file."
                 
                 # Determine the output path
                 if directory:
@@ -125,7 +125,7 @@ class AgentTools:
             try:
                 # Validate content
                 if not content or content.strip() == "":
-                    return f"Error: Content cannot be empty. Please provide actual markdown content to write to the file."
+                    return "Error: Content cannot be empty. Please provide actual markdown content to write to the file."
                 
                 # Determine the output path
                 if directory:
