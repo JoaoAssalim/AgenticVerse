@@ -103,7 +103,7 @@ def invoke_agent_async(request: AgentRequest, header: Annotated[CommonHeaders, H
 @router.post("/execute/sync")
 def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
     logger.info(f"Executing agent ({header.agent_id}) asynchronously")
-    from services.agent_orchestrator import OrchestratorAgent
+    from core.services.agent_orchestrator import OrchestratorAgent
 
     try:
         agent = AgentsAPIView().get_agent(header.agent_id, user.id)

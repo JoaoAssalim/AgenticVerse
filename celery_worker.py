@@ -1,10 +1,10 @@
 import os
 
-from dotenv import load_dotenv
 from celery import Celery
+from dotenv import load_dotenv
 
 from core.api import AgentsAPIView
-from services.agent_orchestrator import OrchestratorAgent
+from core.services.agent_orchestrator import OrchestratorAgent
 
 load_dotenv()
 

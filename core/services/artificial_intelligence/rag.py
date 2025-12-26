@@ -4,8 +4,6 @@ import logging
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from core.database.opensearch import OpenSearchHandler
-
 logger = logging.Logger(__name__)
 
 load_dotenv()
@@ -34,6 +32,7 @@ class RAG:
             raise e
     
     def retrieve_documents_by_similarity(self, index_name: str, query: str, top_k: int) -> list:
+        from core.database.opensearch import OpenSearchHandler
         logging.info("Retrieving documents")
         opensearch_handler = OpenSearchHandler(index_name=index_name)
 

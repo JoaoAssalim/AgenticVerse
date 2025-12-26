@@ -5,14 +5,13 @@ import logging
 from dotenv import load_dotenv
 
 from pydantic_ai import Agent
+from pydantic_ai.tools import Tool
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.ollama import OllamaProvider
 from pydantic_ai.providers.openai import OpenAIProvider
-from pydantic_ai.tools import Tool
 
 from database.models.agent import AgentModel
 from core.database.mongo import DatabaseHandler
-from models import agent
 
 logger = logging.getLogger(__name__)
 

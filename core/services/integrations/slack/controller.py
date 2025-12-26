@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from slack_sdk.signature import SignatureVerifier, Clock
 
-from services.integrations.slack.handler import SlackHandler
+from core.services.integrations.slack.handler import SlackHandler
 
 load_dotenv()
 

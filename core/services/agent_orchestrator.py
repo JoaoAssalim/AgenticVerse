@@ -1,9 +1,9 @@
 import logging
 
 from database.models.agent import AgentModel
-from services.agents.base_agent import BaseAgent
-from services.agents.web_search_agent import WebSearchAgent
-from services.agents.document_handler_agent import DocumentHandlerAgent
+from core.services.agents.base_agent import BaseAgent
+from core.services.agents.web_search_agent import WebSearchAgent
+from core.services.agents.document_handler_agent import DocumentHandlerAgent
 
 from pydantic_ai.tools import Tool
 

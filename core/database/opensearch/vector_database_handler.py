@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from opensearchpy import OpenSearch
 from langchain_community.vectorstores import OpenSearchVectorSearch
 
-from services.artificial_intelligence import RAG
+from core.services.artificial_intelligence import RAG
 
 logger = logging.Logger(__name__)
 

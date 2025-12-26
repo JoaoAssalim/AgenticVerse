@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter
 
-from services.integrations.slack.controller import SlackController
+from core.services.integrations.slack.controller import SlackController
 
 router = APIRouter(
     prefix="/integrations",

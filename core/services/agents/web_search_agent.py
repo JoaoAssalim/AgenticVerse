@@ -1,8 +1,8 @@
 import logging
 
-from services.agents.base_agent import BaseAgent
-from services.tools import AgentTools
+from core.services.tools import AgentTools
 from database.models.agent import AgentModel
+from core.services.agents.base_agent import BaseAgent
 
 from pydantic_ai.tools import Tool
 
