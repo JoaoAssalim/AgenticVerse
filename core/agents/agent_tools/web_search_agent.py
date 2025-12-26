@@ -1,10 +1,12 @@
 import logging
 
-from core.services.tools import AgentTools
-from database.models.agent import AgentModel
-from core.services.agents.base_agent import BaseAgent
+from pydantic_ai import RunContext
 
-from pydantic_ai.tools import Tool
+from database.models.agent import AgentModel
+from core.agents.base_agent import BaseAgent
+from core.agents.base_agent import AgentDeps
+from core.agents.agent_tools.tools import AgentTools
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ class WebSearchQueryGeneratorAgent(BaseAgent):
         self.agent_obj = agent_obj
         self.agent = self.build_agent(
             self.agent_obj,
+            tools=[],
             system_prompt="""You are a Web Search Query Improver Agent specialized in optimizing search queries for Tavily search engine. Your role is to receive a user's search query and transform it into an optimized, effective search query that will yield the best results.
 
 ## PRIMARY FUNCTION:
@@ -82,6 +85,9 @@ class WebSearchAgent(BaseAgent):
         super().__init__()
         self.agent_tools = AgentTools()
         self.agent_obj = agent_obj
+
+        self.query_generator = WebSearchQueryGeneratorAgent(self.agent_obj)
+
         self.agent = self.build_agent(
             self.agent_obj,
             tools=[
@@ -134,14 +140,6 @@ Return information in this structured format:
 - Be efficient - other agents are waiting for your response"""
         )
 
-
-    def web_search_tool(self):
-        @Tool
-        def web_search(query: str) -> str:
-            """Expose WebSearchAgent as a tool for other agents"""
-            logger.info("Invoking Web Search Agent to improve query")
-            query_generator = WebSearchQueryGeneratorAgent(self.agent_obj)
-            new_query = query_generator.execute(query, is_tool_agent=True)
-
-            return self.execute(new_query, is_tool_agent=True)
-        return web_search
+    def web_search_tool(self, query: str, ctx: RunContext[AgentDeps]):
+        new_query = self.query_generator.execute(query, is_tool_agent=True, deps=ctx)
+        return self.execute(new_query, is_tool_agent=True, deps=ctx)

@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 
@@ -7,12 +8,16 @@ from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 
 from core.api import AgentsAPIView
 from database.models.users import UserModel
+from core.agents.base_agent import AgentDeps
 from core.websocket import ConnectionManager
 from database.models.agent import AgentModel
+from core.database.mongo import DatabaseHandler
 from core.auth import validate_api_key, validate_api_key_websocket
 from models import AgentRequest, AgentBaseModel, AgentUpdateModel, CommonHeaders
 
 logger = logging.getLogger(__name__)
+
+MONGO_HISTORY_COLLECTION = os.getenv("MONGODB_HISTORY_COLLECTION")
 
 router = APIRouter(
     prefix="/agent",
@@ -102,14 +107,20 @@ def invoke_agent_async(request: AgentRequest, header: Annotated[CommonHeaders, H
 
 @router.post("/execute/sync")
 def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, Header()], user: UserModel = Depends(validate_api_key)):
-    logger.info(f"Executing agent ({header.agent_id}) asynchronously")
-    from core.services.agent_orchestrator import OrchestratorAgent
+    logger.info(f"Executing agent ({header.agent_id}) synchronously")
+    from core.agents.agent_orchestrator import OrchestratorAgent
 
     try:
         agent = AgentsAPIView().get_agent(header.agent_id, user.id)
 
+        deps = AgentDeps(
+            db=DatabaseHandler(MONGO_HISTORY_COLLECTION),
+            user_id=str(user.id),
+            agent_id=str(header.agent_id)
+        )
+
         agent = OrchestratorAgent(agent)
-        response = agent.execute(request.message, is_tool_agent=False)
+        response = agent.execute(request.message, is_tool_agent=False, deps=deps)
         return {"message": response}
     except Exception as e:
         logger.error(f"Error to execute agent synchronously: {e}")

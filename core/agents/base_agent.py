@@ -3,6 +3,7 @@ import os
 import logging
 
 from dotenv import load_dotenv
+from dataclasses import dataclass
 
 from pydantic_ai import Agent
 from pydantic_ai.tools import Tool
@@ -18,6 +19,12 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 MONGO_HISTORY_COLLECTION = os.getenv("MONGODB_HISTORY_COLLECTION")
+
+@dataclass
+class AgentDeps:
+    db: DatabaseHandler
+    user_id: str
+    agent_id: str
 
 class BaseAgent:
     def __init__(self):
@@ -43,7 +50,7 @@ class BaseAgent:
         )
     
     def build_agent(self, agent_obj: AgentModel, tools: list[Tool], system_prompt: str):
-        logger.info(f"Building agent with tools: {tools} and system prompt: {system_prompt}")
+        logger.info(f"Building agent with tools: {tools} - Agent: {agent_obj.name}")
 
         if agent_obj.provider == "openai":
             model = self.get_openai_model()
@@ -54,10 +61,11 @@ class BaseAgent:
             model, 
             tools=tools,
             system_prompt=system_prompt,
+            deps_type=AgentDeps
         )
         return self.agent
     
-    def execute(self, user_input: str, is_tool_agent: bool = False):
+    def execute(self, user_input: str, deps: AgentDeps, is_tool_agent: bool = False):
         try:
             logger.info(f"Executing agent: {self.agent}")
 
@@ -69,7 +77,7 @@ class BaseAgent:
                 logger.info("No history loaded")
                 agent_history = []
 
-            response = self.agent.run_sync(user_input, message_history=agent_history)
+            response = self.agent.run_sync(user_input, message_history=agent_history, deps=deps)
             agent_response = response.output
 
             if not is_tool_agent:
@@ -79,4 +87,3 @@ class BaseAgent:
         except Exception as e:
             logger.error(f"Error to execute agent: {e}")
             raise e
-    
