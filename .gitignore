@@ -4,6 +4,7 @@ venv/
 
 output/
 data/
+media/
 
 .DS_Store
 *.db

@@ -24,3 +24,6 @@ langchain-community
 langchain-docling
 langchain-huggingface
 pypdf
+docx2txt
+langchain-text-splitters
+python-multipart
