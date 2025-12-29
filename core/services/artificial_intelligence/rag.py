@@ -2,6 +2,7 @@ import os
 import logging
 
 from dotenv import load_dotenv
+from fastapi import HTTPException
 from langchain_huggingface import HuggingFaceEmbeddings
 
 logger = logging.Logger(__name__)
@@ -42,3 +43,23 @@ class RAG:
         except Exception as e:
             logger.error(f"Error to embed documents: {e}")
             raise e
+    
+    def load_file_and_embed(self, index_name: str, file_path: str):
+        from core.database.opensearch import OpenSearchHandler
+        from core.services.artificial_intelligence import FileLoader
+
+        try:
+            file_loader = FileLoader(file_path)
+            vector_database_handler = OpenSearchHandler(index_name)
+
+            documents = file_loader._load_and_split_file()
+
+            status = vector_database_handler.insert_documents(documents)
+
+            if status["Status"] == "Failed":
+                raise HTTPException(status_code=404, detail=status["Message"])
+            
+            return True
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error to upload file: {e}")
