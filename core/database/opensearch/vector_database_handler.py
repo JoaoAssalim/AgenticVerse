@@ -90,7 +90,7 @@ class OpenSearchHandler:
                 self.handler.add_documents(documents)
                 return {"Status": "Success", "Message": "Documents on database"}
             except Exception as e:
-                logger.error(f"Error to delete index: {e}")
+                logger.error(f"Error to insert documents on index: {e}")
                 raise e
 
         return {"Status": "Failed", "Message": "Agent not found"}
@@ -103,7 +103,7 @@ class OpenSearchHandler:
                 documents = self.handler.similarity_search(query=query, k=top_k)
                 return documents
             except Exception as e:
-                logger.error(f"Error to delete index: {e}")
+                logger.error(f"Error to retrieve documents from index: {e}")
                 raise e
 
         return []
