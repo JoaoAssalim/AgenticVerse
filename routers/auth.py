@@ -9,7 +9,7 @@ logger = logging.Logger(__name__)
 
 router = APIRouter(
     prefix="/auth",
-    tags=["auth"],
+    tags=["Auth"],
     responses={404: {"description": "Not found"}},
 )
 

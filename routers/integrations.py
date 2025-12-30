@@ -5,7 +5,7 @@ from core.services.integrations.slack.controller import SlackController
 
 router = APIRouter(
     prefix="/integrations",
-    tags=["integrations"],
+    tags=["Integrations"],
     responses={404: {"description": "Not found"}},
 )
 

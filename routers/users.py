@@ -10,7 +10,7 @@ logger = logging.Logger(__name__)
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
+    tags=["Users"],
     responses={404: {"description": "Not found"}},
 )
 

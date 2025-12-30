@@ -21,7 +21,7 @@ MONGO_HISTORY_COLLECTION = os.getenv("MONGODB_HISTORY_COLLECTION")
 
 router = APIRouter(
     prefix="/agent",
-    tags=["agent"],
+    tags=["Agent"],
     responses={404: {"description": "Not found"}},
 )
 
