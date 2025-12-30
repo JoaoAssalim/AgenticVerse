@@ -100,10 +100,27 @@ class OpenSearchHandler:
 
         if self.index_exists(self.index_name):
             try:
-                documents = self.handler.similarity_search(query=query, k=top_k)
+                documents = self.handler.similarity_search_with_score(query=query, k=top_k)
                 return documents
             except Exception as e:
                 logger.error(f"Error to retrieve documents from index: {e}")
                 raise e
 
         return []
+
+    def clean_index(self):
+        logger.info(f"Retrieving documents: {self.index_name}")
+
+        if self.index_exists(self.index_name):
+            try:
+                body = {
+                    "query": {
+                        "match_all": {}
+                    }
+                }
+                self.client.delete_by_query(index=self.index_name, body=body)
+            except Exception as e:
+                logger.error(f"Error to retrieve documents from index: {e}")
+                raise e
+
+        return True
