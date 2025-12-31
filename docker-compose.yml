@@ -14,6 +14,7 @@ services:
       sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80 --log-level=info"
     volumes:
       - .:/app
+      - hf_cache:/app/.cache/huggingface
     ports:
       - "8000:80"
     depends_on:
@@ -26,12 +27,16 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       REDIS_URL: redis://redis:6379/2
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HOME: "/app/.cache/huggingface"
   
   celery:
     build: .
     command: celery -A celery_worker.celery worker --loglevel=info
     volumes:
       - .:/app
+      - hf_cache:/app/.cache/huggingface
     depends_on:
       - redis
     restart: always
@@ -41,6 +46,9 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       REDIS_URL: redis://redis:6379/2
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HOME: "/app/.cache/huggingface"
 
   mongodb:
     image: mongodb/mongodb-community-server:7.0-ubi9
@@ -96,3 +104,4 @@ services:
 volumes:
   mongodb_data:
   opensearch_data:
+  hf_cache:
