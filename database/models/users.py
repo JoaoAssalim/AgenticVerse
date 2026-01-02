@@ -11,3 +11,4 @@ class UserModel(BaseModel, table=True):
     password: str = Field(nullable=False)
     api_key: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False)
     is_active: bool = Field(default=True, nullable=False)
+    group: str = Field(default_factory="user", nullable=True) # user, manager, admin
