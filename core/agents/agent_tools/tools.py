@@ -8,6 +8,8 @@ from markdown_pdf import MarkdownPdf, Section
 from pydantic_ai.tools import Tool
 from pydantic_ai.common_tools.tavily import tavily_search_tool
 
+from core.services.artificial_intelligence import RAG
+
 logger = logging.Logger(__name__)
 
 class AgentTools:
@@ -151,3 +153,47 @@ class AgentTools:
                 return f"Error creating pdf file: {str(e)}"
         
         return create_pdf_document
+    
+    def get_rag_context_tool(self, index_name: str) -> list:
+        """
+        Creates a RAG retrieval tool for fetching relevant knowledge
+        from an OpenSearch index using semantic similarity.
+        """
+        @Tool
+        def get_rag_context(query: str, top_k: int) -> list:
+            """
+            Retrieve relevant documents from the knowledge base using RAG.
+
+            ✅ USE THIS TOOL FOR:
+            - Retrieving contextual knowledge
+            - Answering questions based on indexed documents
+            - Supplying context to a RAG agent
+
+            ❌ DO NOT use this tool to:
+            - Generate documents
+            - Create PDFs or text files
+            - Answer questions without grounding in retrieved content
+
+            Args:
+                query (str): User question or search query
+                top_k (int): Number of most similar documents to retrieve
+
+            Returns:
+                list: Retrieved documents relevant to the query
+            """
+            logger.info(
+                "Using RAG retrieval tool | index=%s | top_k=%s",
+                index_name,
+                top_k
+            )
+            try:
+                rag = RAG()
+                documents = rag.retrieve_documents_by_similarity(index_name=index_name, query=query, top_k=top_k)
+                
+                return documents
+                
+            except Exception as e:
+                logger.error(f"Error to use RAG tool: {e}")
+                return []
+        
+        return get_rag_context

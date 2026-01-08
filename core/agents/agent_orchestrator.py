@@ -4,8 +4,8 @@ from pydantic_ai import RunContext
 
 from database.models.agent import AgentModel
 from core.agents import BaseAgent, AgentDeps
-from core.agents.agent_tools import WebSearchAgent
-from core.agents.agent_tools import DocumentHandlerAgent
+from core.agents.agent_tools import WebSearchAgent, DocumentHandlerAgent, RAGAgent
+
 
 logger = logging.Logger(__name__)
 
@@ -15,11 +15,13 @@ class OrchestratorAgent(BaseAgent):
         self.agent_obj = agent_obj
         self.available_tools = {
             "web_search": self.web_search_tool,
-            "handle_documents": self.document_handler_tool
+            "handle_documents": self.document_handler_tool,
+            "rag_context": self.rag_context_tool
         }
 
         self.search_worker_agent = WebSearchAgent(self.agent_obj)
         self.document_handler_agent = DocumentHandlerAgent(self.agent_obj)
+        self.rag_agent = RAGAgent(self.agent_obj)
 
         self.agent = self.build_agent(
             self.agent_obj,
@@ -30,29 +32,61 @@ class OrchestratorAgent(BaseAgent):
         )
 
     def _generate_system_prompt(self):
-        return f"""You are an AI Assistant with web search and document creation capabilities.
+        return f"""
+        You are an Orchestrator Agent responsible for deciding which specialized agent or tool to use.
 
-        TOOLS:
-        - call_web_search_agent: Real-time info (news, prices, current events, recent updates)
-        - call_document_handler_agent: Create .txt or .pdf files
+        Your primary goal is to route the user request to the MOST APPROPRIATE agent.
 
-        CRITICAL - DOCUMENT FORMAT:
-        When calling document_handler_agent, ALWAYS prepend query with:
-        - "[FORMAT: PDF]" for PDFs or structured/professional content
-        - "[FORMAT: TEXT]" for plain text files or simple notes
+        ━━━━━━━━━━━━━━━━━━━━━━
+        ## AVAILABLE CAPABILITIES
 
-        Examples:
-        - "create pdf report" → "[FORMAT: PDF] create report..."
-        - "save as text" → "[FORMAT: TEXT] save..."
+        1. rag_context_tool
+        - Retrieves knowledge from the internal knowledge base (RAG)
+        - Use this FIRST for factual, technical, or domain-specific questions
+        - Preferred source for internal documentation and indexed content
 
-        BEHAVIOR:
-        - Answer directly from knowledge when possible
-        - Use web_search for current/real-time information
-        - Create documents only when user explicitly requests
-        - Chain tools when needed (search → document)
-        - Be concise and helpful
+        2. call_web_search_agent
+        - Use ONLY for real-time, current, or external information
+        - Examples: news, live prices, recent events, latest updates
 
-        USER_PROMPT: {self.agent_obj.system_prompt}"""
+        3. call_document_handler_agent
+        - Use ONLY when the user explicitly asks to create or save a document
+        - Supported formats: PDF and TEXT
+
+        ━━━━━━━━━━━━━━━━━━━━━━
+        ## DECISION RULES (CRITICAL)
+
+        1. If the question can be answered using internal knowledge → USE rag_context_tool FIRST
+        2. Only use web search if:
+        - The user explicitly asks for recent/current information, OR
+        - RAG does not contain enough information
+        3. NEVER use web search if RAG is sufficient
+        4. ONLY create documents if the user explicitly requests it
+        5. NEVER create documents implicitly
+
+        ━━━━━━━━━━━━━━━━━━━━━━
+        ## TOOL CHAINING RULES
+
+        - Allowed:
+        rag_context_tool → call_document_handler_agent
+        rag_context_tool → call_web_search_agent (only if insufficient context)
+
+        - NOT allowed:
+        web_search → rag_context_tool
+        document_handler without explicit user request
+
+        ━━━━━━━━━━━━━━━━━━━━━━
+        ## RESPONSE STYLE
+
+        - Be concise and direct
+        - Do not expose internal reasoning
+        - Do not fabricate information
+        - Clearly signal when information is unavailable
+
+        ━━━━━━━━━━━━━━━━━━━━━━
+        USER PROMPT CONTEXT:
+        {self.agent_obj.system_prompt}
+        """
 
     def web_search_tool(self, ctx: RunContext[AgentDeps], query: str):
         logger.info("Calling WebSearch Tool")
@@ -61,3 +95,7 @@ class OrchestratorAgent(BaseAgent):
     def document_handler_tool(self, ctx: RunContext[AgentDeps], query: str):
         logger.info("Calling Document Handler Tool")
         return self.document_handler_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
+
+    def rag_context_tool(self, ctx: RunContext[AgentDeps], query: str):
+        logger.info("Calling RAG Context Handler Tool")
+        return self.rag_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
