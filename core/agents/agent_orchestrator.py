@@ -19,15 +19,11 @@ class OrchestratorAgent(BaseAgent):
             "rag_context": self.rag_context_tool
         }
 
-        self.search_worker_agent = WebSearchAgent(self.agent_obj)
-        self.document_handler_agent = DocumentHandlerAgent(self.agent_obj)
-        self.rag_agent = RAGAgent(self.agent_obj)
+        agent_tools = [self.available_tools.get(tool) for tool in self.agent_obj.tools]
 
         self.agent = self.build_agent(
             self.agent_obj,
-            tools=[
-                self.available_tools.get(tool) for tool in self.agent_obj.tools
-            ],
+            tools=agent_tools,
             system_prompt=self._generate_system_prompt()
         )
 
@@ -90,12 +86,15 @@ class OrchestratorAgent(BaseAgent):
 
     def web_search_tool(self, ctx: RunContext[AgentDeps], query: str):
         logger.info("Calling WebSearch Tool")
-        return self.search_worker_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
+        search_worker_agent = WebSearchAgent(self.agent_obj)
+        return search_worker_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
     
     def document_handler_tool(self, ctx: RunContext[AgentDeps], query: str):
         logger.info("Calling Document Handler Tool")
-        return self.document_handler_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
+        document_handler_agent = DocumentHandlerAgent(self.agent_obj)
+        return document_handler_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
 
     def rag_context_tool(self, ctx: RunContext[AgentDeps], query: str):
         logger.info("Calling RAG Context Handler Tool")
-        return self.rag_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
+        rag_agent = RAGAgent(self.agent_obj)
+        return rag_agent.execute(query, is_tool_agent=True, deps=ctx.deps)
