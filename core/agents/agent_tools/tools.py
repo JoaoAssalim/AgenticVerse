@@ -25,7 +25,16 @@ class AgentTools:
     
     def tavily_search(self):
         """
-        Search the web for information.
+        SEARCH THE EXTERNAL INTERNET (SECONDARY SOURCE).
+        
+        ✅ USE ONLY IF:
+        1. The RAG context did not provide enough information.
+        2. The user is asking about current events, today's news, or real-time data (stock prices, weather).
+        3. Information is specifically requested from the 'web' or 'internet'.
+
+        ❌ DO NOT USE:
+        - For internal company data.
+        - If the RAG context already provides a sufficient answer.
         """
         logger.info("Using Tavily Search Tool")
         return tavily_search_tool(self.tavily_search_api_key)
@@ -35,9 +44,6 @@ class AgentTools:
     # ================================
 
     def create_text_document_tool(self):
-        """
-        Create a text document with LLM-generated content.
-        """
         @Tool
         def create_text_document(
             filename: str,
@@ -45,22 +51,28 @@ class AgentTools:
             directory: Optional[str] = None
         ) -> str:
             """
-            Create a PLAIN TEXT (.txt) file with the specified content.
-            
-            ⚠️ ONLY use this tool for:
-            - Plain text files, notes, or simple documents
-            - When user explicitly asks for a .txt or text file
-            - When the query contains "[FORMAT: TEXT]"
-            
-            ❌ DO NOT use for PDFs - use create_pdf_document instead
-            
+            WRITE A PLAIN TEXT (.txt) FILE TO STORAGE.
+
+            ⚠️ MANDATORY TRIGGER: Use this tool ONLY when the user explicitly asks to "save", "export", 
+            "create a file", or "write to a txt". 
+
+            ✅ USE THIS TOOL FOR:
+            - Saving raw notes, logs, or unformatted snippets.
+            - Creating simple .txt files as requested by the user.
+            - When the user specifically mentions "Text format" or ".txt".
+
+            ❌ DO NOT USE FOR:
+            - Generating a response in the chat (just reply normally for that).
+            - Professional reports, tables, or formatted documents (USE create_pdf_document INSTEAD).
+            - Storing data if the user didn't explicitly ask for a FILE.
+
             Args:
-                filename: Name of the file to create (without extension, .txt will be added automatically)
-                content: The plain text content to write to the file
-                directory: Optional subdirectory within the output folder
-            
+                filename: The name of the file. If no extension is provided, .txt will be appended.
+                content: The literal string content to be written inside the file.
+                directory: Optional sub-folder name to organize the file.
+
             Returns:
-                Success message with file path
+                A confirmation message with the absolute path of the created file.
             """
             logger.info("Using Text Document Handling Tool")
             try:
@@ -92,12 +104,8 @@ class AgentTools:
                 return f"Error creating text file: {str(e)}"
         
         return create_text_document
-    
 
     def create_pdf_document_tool(self):
-        """
-        Create a pdf document with LLM-generated content.
-        """
         @Tool
         def create_pdf_document(
             filename: str,
@@ -105,23 +113,18 @@ class AgentTools:
             directory: Optional[str] = None
         ) -> str:
             """
-            Create a PDF (.pdf) file from markdown content.
+            EXPORT CONTENT TO PDF FILE.
             
-            ✅ USE THIS TOOL for:
-            - PDF files
-            - When user asks for "pdf" or "PDF"
-            - When the query contains "[FORMAT: PDF]"
-            - Formatted documents, reports, or professional content
+            ⚠️ TRIGGER: ONLY use this tool if the user explicitly uses words like 'export', 'save as pdf', 
+            'generate a report file', or 'create a document'. 
             
-            ❌ DO NOT use for plain text files - use create_text_document instead
+            ✅ USE FOR:
+            - Formal reports, resumes, and multi-page formatted documents.
+            - When visual structure and professional layout are required.
             
-            Args:
-                filename: Name of the file to create (without extension, .pdf will be added automatically)
-                content: The markdown content to write to the file.
-                directory: Optional subdirectory within the output folder
-            
-            Returns:
-                Success message with file path
+            ❌ PROHIBITED:
+            - DO NOT call this tool unless the user specifically asked for a FILE to be generated.
+            - DO NOT use for plain notes or simple lists (use create_text_document for those).
             """
             logger.info("Using PDF Document Handling Tool")
             try:
@@ -154,32 +157,29 @@ class AgentTools:
         
         return create_pdf_document
     
+    # ================================
+    # RAG Tools
+    # ================================
+    
     def get_rag_context_tool(self, index_name: str) -> list:
-        """
-        Creates a RAG retrieval tool for fetching relevant knowledge
-        from an OpenSearch index using semantic similarity.
-        """
         @Tool
         def get_rag_context(query: str, top_k: int) -> list:
             """
-            Retrieve relevant documents from the knowledge base using RAG.
+            ACCESS INTERNAL KNOWLEDGE BASE (MANDATORY FIRST STEP).
+            
+            Use this tool ALWAYS as your first action for any factual, technical, or company-specific query.
+            This tool performs a semantic search against our private database to provide verified context.
 
-            ✅ USE THIS TOOL FOR:
-            - Retrieving contextual knowledge
-            - Answering questions based on indexed documents
-            - Supplying context to a RAG agent
+            ✅ USE FOR:
+            - Verifying facts before answering.
+            - Finding technical documentation, policies, or historical data.
+            - Any query where the user asks about 'internal' or 'saved' info.
 
-            ❌ DO NOT use this tool to:
-            - Generate documents
-            - Create PDFs or text files
-            - Answer questions without grounding in retrieved content
+            ❌ DO NOT USE FOR:
+            - Real-time news or external events (use tavily_search for that).
+            - Creating files or formatting text.
 
-            Args:
-                query (str): User question or search query
-                top_k (int): Number of most similar documents to retrieve
-
-            Returns:
-                list: Retrieved documents relevant to the query
+            If this tool returns "No relevant context found", only then should you consider external tools.
             """
             logger.info(
                 "Using RAG retrieval tool | index=%s | top_k=%s",
