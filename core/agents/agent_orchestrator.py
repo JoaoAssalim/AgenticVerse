@@ -2,7 +2,7 @@ import logging
 
 from pydantic_ai import RunContext
 
-from database.models.agent import AgentModel
+from database.schemas import AgentModel
 from core.agents import BaseAgent, AgentDeps
 from core.agents.agent_tools import WebSearchAgent, DocumentHandlerAgent, RAGAgent
 
@@ -41,11 +41,11 @@ class OrchestratorAgent(BaseAgent):
         - Use this FIRST for factual, technical, or domain-specific questions
         - Preferred source for internal documentation and indexed content
 
-        2. call_web_search_agent
+        2. web_search_tool
         - Use ONLY for real-time, current, or external information
         - Examples: news, live prices, recent events, latest updates
 
-        3. call_document_handler_agent
+        3. document_handler_tool
         - Use ONLY when the user explicitly asks to create or save a document
         - Supported formats: PDF and TEXT
 
@@ -64,12 +64,12 @@ class OrchestratorAgent(BaseAgent):
         ## TOOL CHAINING RULES
 
         - Allowed:
-        rag_context_tool → call_document_handler_agent
-        rag_context_tool → call_web_search_agent (only if insufficient context)
+        rag_context_tool → document_handler_tool
+        rag_context_tool → web_search_tool (only if insufficient context)
 
         - NOT allowed:
-        web_search → rag_context_tool
-        document_handler without explicit user request
+        web_search_tool → rag_context_tool
+        document_handler_tool without explicit user request
 
         ━━━━━━━━━━━━━━━━━━━━━━
         ## RESPONSE STYLE

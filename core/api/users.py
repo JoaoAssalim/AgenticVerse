@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 
 from database.config import engine
 from core.auth.utils import hash_password
-from database.models.users import UserModel
+from database.schemas import UserModel
 
 logger = logging.Logger(__name__)
 

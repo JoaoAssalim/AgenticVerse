@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from core.auth import validate_api_key
 from core.api.users import UsersAPIView
-from database.models.users import UserModel
+from database.schemas import UserModel
 from core.utils.permissions import handle_user_permission
 from models.users import UserBaseModel, UserUpdateModel, UserResponseModel
 

@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from database.config import engine
-from database.models.agent import AgentModel
+from database.schemas import AgentModel
 from core.database.opensearch import OpenSearchHandler
 
 logger = logging.Logger(__name__)

@@ -8,9 +8,8 @@ from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect,H
 
 from core.agents import AgentDeps
 from core.api import AgentsAPIView
-from database.models.users import UserModel
+from database.schemas import UserModel, AgentModel
 from core.websocket import ConnectionManager
-from database.models.agent import AgentModel
 from core.database.mongo import DatabaseHandler
 from core.utils.permissions import handle_user_permission
 from core.auth import validate_api_key, validate_api_key_websocket

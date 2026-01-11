@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 from sqlmodel import SQLModel, create_engine
 
-from database.models import BaseModel, UserModel, AgentModel
+from database.schemas import BaseModel, UserModel, AgentModel
 
 # Load environment variables from .env file
 load_dotenv()

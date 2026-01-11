@@ -2,7 +2,7 @@ import logging
 
 from pydantic_ai import RunContext
 
-from database.models.agent import AgentModel
+from database.schemas import AgentModel
 from core.agents import BaseAgent, AgentDeps
 from core.agents.agent_tools import AgentTools
 

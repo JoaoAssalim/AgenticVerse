@@ -1,9 +1,9 @@
 import uuid
+from sqlalchemy import Column
 from typing import List, Optional
 from sqlmodel import Field, JSON, ForeignKey
-from sqlalchemy import Column
 
-from database.models.base import BaseModel
+from database.schemas import BaseModel
 
 class AgentModel(BaseModel, table=True):
     __tablename__ = "agents"

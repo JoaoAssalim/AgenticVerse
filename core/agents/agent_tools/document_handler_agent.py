@@ -1,7 +1,7 @@
 import logging
 
 from core.agents import BaseAgent
-from database.models.agent import AgentModel
+from database.schemas import AgentModel
 from core.agents.agent_tools import AgentTools
 
 

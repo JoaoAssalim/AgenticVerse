@@ -11,7 +11,7 @@ from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.ollama import OllamaProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from database.models.agent import AgentModel
+from database.schemas import AgentModel
 from core.database.mongo import DatabaseHandler
 
 logger = logging.getLogger(__name__)

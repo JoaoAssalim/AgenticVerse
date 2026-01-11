@@ -4,7 +4,7 @@ from fastapi.security import APIKeyHeader
 from sqlmodel import Session, select
 
 from database.config import engine
-from database.models.users import UserModel
+from database.schemas import UserModel
 
 api_key = APIKeyHeader(name="x-api-key")
 

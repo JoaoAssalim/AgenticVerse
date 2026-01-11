@@ -21,7 +21,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from database.models import UserModel, BaseModel, AgentModel
+from database.schemas import UserModel, BaseModel, AgentModel
 from sqlmodel import SQLModel
 
 # Import all models to ensure they are registered with SQLModel

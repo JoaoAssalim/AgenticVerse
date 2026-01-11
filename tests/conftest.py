@@ -1,7 +1,7 @@
 import pytest
 import json
 
-from database.models import AgentModel, UserModel
+from database.schemas import AgentModel, UserModel
 from core.api import UsersAPIView, AgentsAPIView
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException
 
 from core.auth import validate_api_key
 from core.api.agents import AgentsAPIView
-from database.models.users import UserModel
+from database.schemas import UserModel
 from models.rag import RetrieveContextRequest
 from core.services.artificial_intelligence import RAG
 from core.database.opensearch import OpenSearchHandler

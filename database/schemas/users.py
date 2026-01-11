@@ -1,7 +1,7 @@
 import uuid
 from sqlmodel import Field
 
-from database.models.base import BaseModel
+from database.schemas import BaseModel
 
 class UserModel(BaseModel, table=True):
     __tablename__ = "users"
