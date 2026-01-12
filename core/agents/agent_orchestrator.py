@@ -15,7 +15,7 @@ class OrchestratorAgent(BaseAgent):
         self.agent_tools = AgentTools()
 
         self.available_tools = {
-            "web_search": [self.agent_tools.tavily_search()],
+            "web_search": [self.agent_tools.tavily_search(self.agent_obj)],
             "handle_documents": [self.agent_tools.create_pdf_document_tool(), self.agent_tools.create_text_document_tool()],
             "rag_context": [self.agent_tools.get_rag_context_tool(self.agent_obj.opensearch_index)]
         }
@@ -68,16 +68,17 @@ class OrchestratorAgent(BaseAgent):
             rules.append("\n" + "━" * 20 + "\n## CRITICAL DECISION HIERARCHY")
 
         if "rag_context" in tools:
-            rules.append("1. ALWAYS check internal knowledge (rag_context) before attempting external searches.")
+            rules.append("1. FIRST STEP: Always invoke 'get_rag_context'.")
         
         if "web_search" in tools:
-            rules.append("2. Use web_search ONLY if the RAG search returns no results or if the user asks for 'latest/today's' news.")
+            rules.append("2. MANDATORY FALLBACK: If 'get_rag_context' returns no results, empty lists, or insufficient information to answer the user's question, you MUST immediately call 'tavily_search'.")
+            rules.append("3. REAL-TIME: Use 'tavily_search' directly only for news from today or specific external URLs.")
             
         if "handle_documents" in tools:
-            rules.append("3. DOCUMENT CREATION: Only invoke document tools if the user explicitly says 'create a PDF' or 'save this as a file'.")
+            rules.append("4. DOCUMENT CREATION: Only invoke document tools if the user explicitly says 'create a PDF' or 'save this as a file'.")
 
         rules.append("\n## PROHIBITED SEQUENCES")
-        rules.append("- NEVER call web_search BEFORE calling rag_context.")
+        rules.append("- NEVER say 'I don't know' or 'Information not found' if you haven't tried 'tavily_search' after a failed RAG search.")
         rules.append("- NEVER create a document automatically without a direct user command.")
         
         return "\n".join(rules)

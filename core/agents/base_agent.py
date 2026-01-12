@@ -2,6 +2,7 @@
 import os
 import logging
 
+from datetime import datetime
 from dotenv import load_dotenv
 from dataclasses import dataclass
 
@@ -49,6 +50,17 @@ class BaseAgent:
             provider=OpenAIProvider(api_key=self.openai_api_key),
         )
     
+    def _build_base_prompt(self, base_prompt):
+        now = datetime.now().strftime("%A, %B %d, %Y") 
+        return f"""
+        ### TEMPORAL CONTEXT
+        - Current Date: {now}
+        - Use this date to determine if information is outdated or if a web search is needed for 'recent' events.
+
+        ### AGENT INSTRUCTIONS
+        {base_prompt}
+        """
+    
     def build_agent(self, agent_obj: AgentModel, tools: list[Tool], system_prompt: str):
         logger.info(f"Building agent with tools: {tools} - Agent: {agent_obj.name}")
 
@@ -60,7 +72,7 @@ class BaseAgent:
         self.agent = Agent(
             model, 
             tools=tools,
-            system_prompt=system_prompt,
+            system_prompt=self._build_base_prompt(system_prompt),
             deps_type=AgentDeps
         )
         return self.agent
@@ -86,4 +98,15 @@ class BaseAgent:
             return agent_response
         except Exception as e:
             logger.error(f"Error to execute agent: {e}")
+            raise e
+
+
+class AuxiliarBaseAgent(BaseAgent):
+    def execute(self, user_input: str):
+        try:
+            logger.info(f"Executing auxiliar agent: {self.agent}")
+            response = self.agent.run_sync(user_input)
+            return response.output
+        except Exception as e:
+            logger.error(f"Error to execute auxiliar agent: {e}")
             raise e

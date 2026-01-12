@@ -3,12 +3,13 @@ import logging
 
 from pathlib import Path
 from typing import Optional
+from tavily import TavilyClient
+from pydantic_ai.tools import Tool
 from markdown_pdf import MarkdownPdf, Section
 
-from pydantic_ai.tools import Tool
-from pydantic_ai.common_tools.tavily import tavily_search_tool
-
+from database.schemas import AgentModel
 from core.services.artificial_intelligence import RAG
+from core.agents.agent_tools.query_generator_agent import QueryGeneratorAgent
 
 logger = logging.Logger(__name__)
 
@@ -23,21 +24,30 @@ class AgentTools:
     # Web Search Tools
     # ================================
     
-    def tavily_search(self):
-        """
-        SEARCH THE EXTERNAL INTERNET (SECONDARY SOURCE).
-        
-        ✅ USE ONLY IF:
-        1. The RAG context did not provide enough information.
-        2. The user is asking about current events, today's news, or real-time data (stock prices, weather).
-        3. Information is specifically requested from the 'web' or 'internet'.
+    def tavily_search(self, agent_obj: AgentModel):
+        @Tool
+        def search(query: str):
+            """
+            SEARCH THE EXTERNAL INTERNET (MANDATORY FALLBACK).
+            
+            ✅ TRIGGER THIS TOOL IF:
+            1. The 'get_rag_context' tool returned "No relevant context found", an empty list [], or insufficient data.
+            2. The user asks for real-time data, current news, or external info not present in company records.
+            
+            ⚠️ OBLIGATION:
+            If you cannot find the answer in the RAG, you ARE REQUIRED to use this tool before giving up.
+            """
 
-        ❌ DO NOT USE:
-        - For internal company data.
-        - If the RAG context already provides a sufficient answer.
-        """
-        logger.info("Using Tavily Search Tool")
-        return tavily_search_tool(self.tavily_search_api_key)
+            query_generator = QueryGeneratorAgent(agent_obj=agent_obj)
+            new_query = query_generator.generate(query=query)
+            print(f"NEW QUERY: {new_query}")
+            logger.info("Using Tavily Search Tool")
+            tavily_client = TavilyClient(api_key=self.tavily_search_api_key)
+            response = tavily_client.search(new_query)
+
+            return response
+
+        return search
 
     # ================================
     # Document Handling Tools

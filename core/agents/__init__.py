@@ -4,5 +4,5 @@ from core.agents.agent_orchestrator import OrchestratorAgent
 __all__ = [
     "OrchestratorAgent",
     "AgentDeps",
-    "BaseAgent"
+    "BaseAgent",
 ]
