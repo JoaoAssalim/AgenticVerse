@@ -2,12 +2,14 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 
 from core.auth import validate_api_key
-from core.api.users import UsersAPIView
 from database.schemas import UserModel
+from core.api.users import UsersAPIView
 from core.utils.permissions import handle_user_permission
 from models.users import UserBaseModel, UserUpdateModel, UserResponseModel
 
 logger = logging.Logger(__name__)
+
+user_api = UsersAPIView()
 
 router = APIRouter(
     prefix="/users",
@@ -22,7 +24,7 @@ def create_user(user: UserBaseModel):
     try:
         user_model = user.model_dump_json(exclude_unset=True)
         user_model = UserModel.model_validate_json(user_model)
-        return UsersAPIView().create_user(user_model)
+        return user_api.create(user_model)
     except HTTPException as e:
         logger.error(f"Error creating user: {e}")
         raise e
@@ -38,7 +40,7 @@ def update_user(user_id: str, user_data: UserUpdateModel, user: UserModel = Depe
         handle_user_permission(user.group, ["user", "manager", "admin"])
         user_model = user_data.model_dump_json(exclude_unset=True)
         user_model = UserModel.model_validate_json(user_model)
-        return UsersAPIView().update_user(user_id, user_model)
+        return user_api.update(user_id, user_model)
     except HTTPException as e:
         logger.error(f"Error updating user: {user_id}")
         raise e
@@ -52,7 +54,7 @@ def get_user(user_id: str, user: UserModel = Depends(validate_api_key)):
 
     try:
         handle_user_permission(user.group, ["user", "manager", "admin"])
-        user_model = UsersAPIView().get_user(user_id)
+        user_model = user_api.get(user_id)
         user_model = UserResponseModel.model_validate_json(user_model.model_dump_json())
         return user_model
     except HTTPException as e:
@@ -68,7 +70,7 @@ def get_all_users(user: UserModel = Depends(validate_api_key)):
 
     try:
         handle_user_permission(user.group, ["admin"])
-        users_model = UsersAPIView().get_all_users()
+        users_model = user_api.get_all()
         users_model = [UserResponseModel.model_validate_json(user_model.model_dump_json()) for user_model in users_model]
         return users_model
     except HTTPException as e:
@@ -84,7 +86,7 @@ def delete_user(user_id: str, user: UserModel = Depends(validate_api_key)):
 
     try:
         handle_user_permission(user.group, ["manager", "admin"])
-        return UsersAPIView().delete_user(user_id)
+        return user_api.delete(user_id)
     except HTTPException as e:
         logger.error(f"Error deleting user: {user_id}")
         raise e

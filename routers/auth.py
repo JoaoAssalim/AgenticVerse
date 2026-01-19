@@ -16,7 +16,7 @@ router = APIRouter(
 @router.post("/login")
 async def login(user: UserLoginModel):
     logger.info(f"Authenticating user {user.email}")
-    user_db = UsersAPIView().get_user_by_email(user.email)
+    user_db = UsersAPIView().get_by_email(user.email)
 
     if not verify_password(user.password, user_db.password):
         logger.error(f"Error to authenticate user {user.email}")

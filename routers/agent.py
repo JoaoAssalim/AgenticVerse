@@ -8,15 +8,16 @@ from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect,H
 
 from core.agents import AgentDeps
 from core.api import AgentsAPIView
-from database.schemas import UserModel, AgentModel
 from core.websocket import ConnectionManager
 from core.database.mongo import DatabaseHandler
+from database.schemas import UserModel, AgentModel
 from core.utils.permissions import handle_user_permission
 from core.auth import validate_api_key, validate_api_key_websocket
 from models import AgentRequest, AgentBaseModel, AgentUpdateModel, CommonHeaders
 
 logger = logging.getLogger(__name__)
 
+agent_api = AgentsAPIView()
 MONGO_HISTORY_COLLECTION = os.getenv("MONGODB_HISTORY_COLLECTION")
 
 router = APIRouter(
@@ -125,7 +126,7 @@ def invoke_agent_sync(request: AgentRequest, header: Annotated[CommonHeaders, He
 
     try:
         handle_user_permission(user.group, ["user", "manager", "admin"])
-        agent = AgentsAPIView().get_agent(header.agent_id, user.id)
+        agent = agent_api.get(header.agent_id, user.id)
 
         deps = AgentDeps(
             db=DatabaseHandler(MONGO_HISTORY_COLLECTION),
@@ -152,7 +153,7 @@ def create_agent(agent: AgentBaseModel, user: UserModel = Depends(validate_api_k
         agent_model = agent.model_dump_json()
         logger.info(f"Agent data: {agent_model}")
         agent_model = AgentModel.model_validate_json(agent_model)
-        return AgentsAPIView().create_agent(agent_model, user.id)
+        return agent_api.create(agent_model, user.id)
     except HTTPException as e:
         logger.error("Error to create agent")
         raise e
@@ -169,7 +170,7 @@ def update_agent(agent_id: str, agent: AgentUpdateModel, user: UserModel = Depen
         agent_model = agent.model_dump_json(exclude_unset=True)
         logger.info(f"Agent data: {agent_model}")
         agent_model = AgentModel.model_validate_json(agent_model)
-        return AgentsAPIView().update_agent(agent_id, agent_model, user.id)
+        return agent_api.update(agent_id, agent_model, user.id)
     except HTTPException as e:
         logger.error(f"Error to update agent: {agent_id}")
         raise e
@@ -183,7 +184,7 @@ def get_agent(agent_id: str, user: UserModel = Depends(validate_api_key)):
 
     try:
         handle_user_permission(user.group, ["user", "manager", "admin"])
-        return AgentsAPIView().get_agent(agent_id, user.id)
+        return agent_api.get(agent_id, user.id)
     except HTTPException as e:
         logger.error(f"Error to get agent: {agent_id}")
         raise e
@@ -196,7 +197,7 @@ def get_all_agents(user: UserModel = Depends(validate_api_key)):
     logger.info("Getting all agents")
     try:
         handle_user_permission(user.group, ["manager", "admin"])
-        return AgentsAPIView().get_all_agents(user.id)
+        return agent_api.get_all(user.id)
     except HTTPException as e:
         logger.error("Error to get all agents")
         raise e
@@ -210,11 +211,24 @@ def delete_agent(agent_id: str, user: UserModel = Depends(validate_api_key)):
 
     try:
         handle_user_permission(user.group, ["user", "manager", "admin"])
-        return AgentsAPIView().delete_agent(agent_id, user.id)
+        return agent_api.delete(agent_id, user.id)
     except HTTPException as e:
         logger.error(f"Error deleting agent: {agent_id}")
         raise e
     except Exception as e:
         logger.error(f"Error deleting agent: {e}")
         raise e
-    
+
+@router.get("/get-or-create/{agent_name}")
+def get_or_create_agent(agent_name: str, user: UserModel = Depends(validate_api_key)):
+    logger.info(f"Getting agent with: {agent_name}")
+
+    try:
+        handle_user_permission(user.group, ["user", "manager", "admin"])
+        return agent_api.get_or_create(agent_name, user.id)
+    except HTTPException as e:
+        logger.error(f"Error to get agent: {agent_name}")
+        raise e
+    except Exception as e:
+        logger.error(f"Error getting agent ({agent_name}): {e}")
+        raise e

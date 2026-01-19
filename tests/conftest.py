@@ -1,11 +1,11 @@
-import pytest
 import json
+import pytest
 
-from database.schemas import AgentModel, UserModel
 from core.api import UsersAPIView, AgentsAPIView
+from database.schemas import AgentModel, UserModel
 
 @pytest.fixture
-def user_test() -> UserModel:
+def user_test():
     user_data_test = {
         "name": "User Test",
         "email": "test@test.com",
@@ -14,14 +14,14 @@ def user_test() -> UserModel:
     
     user_data_test_string = json.dumps(user_data_test)
     user_test_db = UserModel.model_validate_json(user_data_test_string)
-    user_test = UsersAPIView().create_user(user_test_db)
+    user_test = UsersAPIView().create(user_test_db)
     
     yield user_test
 
-    UsersAPIView().delete_user(str(user_test.id))
+    UsersAPIView().delete(str(user_test.id))
 
 @pytest.fixture
-def agent_test(user_test) -> AgentModel:
+def agent_test(user_test):
     agent_data_test = {
         "name": "Agent Test",
         "description": "Agent test",
@@ -32,11 +32,11 @@ def agent_test(user_test) -> AgentModel:
 
     agent_data_test_string = json.dumps(agent_data_test)
     agent_test_db = AgentModel.model_validate_json(agent_data_test_string)
-    agent_test = AgentsAPIView().create_agent(agent_test_db, user_test.id)
+    agent_test = AgentsAPIView().create(agent_test_db, user_test.id)
     
     yield agent_test
 
-    AgentsAPIView().delete_agent(str(agent_test.id), user_test.id)
+    AgentsAPIView().delete(str(agent_test.id), user_test.id)
 
 @pytest.fixture
 def agent_data_creation():

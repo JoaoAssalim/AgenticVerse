@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from database.config import engine
-from core.auth.utils import hash_password
 from database.schemas import UserModel
+from core.auth.utils import hash_password
 
 logger = logging.Logger(__name__)
 
@@ -15,7 +15,7 @@ class UsersAPIView:
     def __init__(self):
         pass
 
-    def create_user(self, user: UserModel):
+    def create(self, user: UserModel):
         logger.info("Creating user")
 
         if user.password and len(user.password) < 8:
@@ -41,7 +41,7 @@ class UsersAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=e)
         
-    def get_user(self, user_id: str):
+    def get(self, user_id: str):
         logger.info("Getting user")
         try:
             with Session(engine) as session:
@@ -72,7 +72,7 @@ class UsersAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=e)
         
-    def get_user_by_email(self, email: str):
+    def get_by_email(self, email: str):
         logger.info("Getting user by email")
         try:
             with Session(engine) as session:
@@ -87,8 +87,23 @@ class UsersAPIView:
             logger.error(f"Error to get user by email: {e}")
             session.rollback()
             raise HTTPException(status_code=500, detail=e)
+
+    def get_by_name(self, name: str):
+        logger.info("Getting user by name")
+        try:
+            with Session(engine) as session:
+                user = session.exec(select(UserModel).where(UserModel.name == name)).first()
+                if not user:
+                    return False
+                return user
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error to get user by name: {e}")
+            session.rollback()
+            raise HTTPException(status_code=500, detail=e)
         
-    def get_all_users(self):
+    def get_all(self):
         try:
             with Session(engine) as session:
                 users = session.exec(select(UserModel)).all()
@@ -98,7 +113,7 @@ class UsersAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=e)
         
-    def update_user(self, user_id: str, user: UserModel):
+    def update(self, user_id: str, user: UserModel):
         logger.info(f"Updating user: {user_id}")
         try:
             if user.password:
@@ -129,7 +144,7 @@ class UsersAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=e)
         
-    def delete_user(self, user_id: str):
+    def delete(self, user_id: str):
         logger.info(f"Deleting user: {user_id}")
         try:
             with Session(engine) as session:
@@ -137,5 +152,28 @@ class UsersAPIView:
                 session.commit()
         except Exception as e:
             logger.error(f"Error to delete user: {e}")
+            session.rollback()
+            raise HTTPException(status_code=500, detail=e)
+    
+    def get_or_create(self, name: str):
+        try:
+            with Session(engine) as session:
+                user = self.get_by_name(name)
+
+                if not user:
+                    user_model = UserModel(
+                        name=name,
+                        email=f"{name}@{name}.com",
+                        is_active=True,
+                        group="admin"
+                    )
+
+                    user = self.create_user(user_model)
+                return user
+            
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error to get or create user: {e}")
             session.rollback()
             raise HTTPException(status_code=500, detail=e)

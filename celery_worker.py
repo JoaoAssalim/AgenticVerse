@@ -22,7 +22,7 @@ celery = Celery(
 @celery.task
 def execute_agent_task(message, user_id, agent_id, ctx: RunContext[AgentDeps]):
     try:
-        agent = AgentsAPIView().get_agent(agent_id, user_id)
+        agent = AgentsAPIView().get(agent_id, user_id)
 
         deps = AgentDeps(
             db=DatabaseHandler(MONGO_HISTORY_COLLECTION),

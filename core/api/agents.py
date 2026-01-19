@@ -14,7 +14,7 @@ class AgentsAPIView:
         index = f"agentic-{str(uuid.uuid4())}"
         self.opensearch_handler = OpenSearchHandler(index_name=index)
 
-    def create_agent(self, agent: AgentModel, user_id: str):
+    def create(self, agent: AgentModel, user_id: str):
         logger.info("Creating agent")
         try:
             index_name = self.opensearch_handler.create_index()
@@ -32,7 +32,7 @@ class AgentsAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=f"Error to create agent: {e}")
         
-    def get_agent(self, agent_id: str, user_id: str):
+    def get(self, agent_id: str, user_id: str):
         logger.info(f"Getting agent: {agent_id}")
         try:
             with Session(engine) as session:
@@ -55,7 +55,25 @@ class AgentsAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=f"Error to get agent {agent_id}: {e}")
     
-    def get_all_agents(self, user_id: str):
+    def get_by_name(self, agent_name: str):
+        logger.info(f"Getting agent: {agent_name}")
+        try:
+            with Session(engine) as session:
+                agent = session.exec(select(AgentModel).where(AgentModel.name == agent_name)).first()
+
+                if not agent:
+                    return False
+
+                return agent
+            
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error to get agent: {e}")
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to get agent {agent_name}: {e}")
+    
+    def get_all(self, user_id: str):
         logger.info("Getting all users")
         try:
             with Session(engine) as session:
@@ -67,7 +85,7 @@ class AgentsAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=f"Error to get all agent: {e}")
     
-    def update_agent(self, agent_id: str, agent: AgentModel, user_id: str):
+    def update(self, agent_id: str, agent: AgentModel, user_id: str):
         logger.info(f"Updating agent: {agent_id}")
         try:
             with Session(engine) as session:
@@ -96,7 +114,7 @@ class AgentsAPIView:
             session.rollback()
             raise HTTPException(status_code=500, detail=f"Error to update agent {agent_id}: {e}")
     
-    def delete_agent(self, agent_id: str, user_id: str):
+    def delete(self, agent_id: str, user_id: str):
         logger.info(f"Deleting agent: {agent_id}")
         try:
             with Session(engine) as session:
@@ -119,3 +137,26 @@ class AgentsAPIView:
             logger.error(f"Error to delete agent: {e}")
             session.rollback()
             raise HTTPException(status_code=500, detail=f"Error to delete agent {agent_id}: {e}")
+    
+    def get_or_create(self, agent_name: str, user_id: str = None):
+        try:
+            agent = self.get_by_name(agent_name=agent_name)
+
+            if not agent:
+
+                if not user_id:
+                    from core.api import UsersAPIView
+                    user_id = UsersAPIView().get_or_create(name="admin")
+
+                agent_model = AgentModel(
+                    name=agent_name,
+                    description=f"{agent_name} Helper",
+                    system_prompt="Answer user questions",
+                    tools=["web_search", "rag_context"],
+                    provider="openai"
+                )
+                agent = self.create(agent_model, user_id)
+            
+            return agent
+        except Exception as e:
+            raise e

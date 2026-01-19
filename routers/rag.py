@@ -4,8 +4,8 @@ import logging
 from fastapi import APIRouter, Depends, UploadFile, HTTPException
 
 from core.auth import validate_api_key
-from core.api.agents import AgentsAPIView
 from database.schemas import UserModel
+from core.api.agents import AgentsAPIView
 from models.rag import RetrieveContextRequest
 from core.services.artificial_intelligence import RAG
 from core.database.opensearch import OpenSearchHandler
@@ -14,6 +14,8 @@ from core.services.artificial_intelligence.helpers import validate_file, save_fi
 
 
 logger = logging.Logger(__name__)
+
+agent_api = AgentsAPIView()
 
 router = APIRouter(
     prefix="/rag",
@@ -29,7 +31,7 @@ def upload_file_to_vector_database(agent_id: str, file: UploadFile, user: UserMo
         handle_user_permission(user.group, ["user", "manager", "admin"])
 
         rag = RAG()
-        agent = AgentsAPIView().get_agent(agent_id=agent_id, user_id=user.id)
+        agent = agent_api.get(agent_id=agent_id, user_id=user.id)
 
         file_path = save_file_locally(file)
         validate_file(file_path, file.size)
@@ -59,7 +61,7 @@ def retrieve_context_from_vector_database(agent_id: str, context: RetrieveContex
         handle_user_permission(user.group, ["user", "manager", "admin"])
 
         rag = RAG()
-        agent = AgentsAPIView().get_agent(agent_id=agent_id, user_id=user.id)
+        agent = agent_api.get(agent_id=agent_id, user_id=user.id)
 
         query, top_k = context.query, context.top_k
         content = rag.retrieve_documents_by_similarity(index_name=agent.opensearch_index, query=query, top_k=top_k)
@@ -78,7 +80,7 @@ def clean_documents_from_index(agent_id: str, user: UserModel = Depends(validate
     try:
         handle_user_permission(user.group, ["user", "manager", "admin"])
         
-        agent = AgentsAPIView().get_agent(agent_id=agent_id, user_id=user.id)
+        agent = agent_api.get(agent_id=agent_id, user_id=user.id)
         opensearch_handler = OpenSearchHandler(index_name=agent.opensearch_index)
 
         opensearch_handler.clean_index()
