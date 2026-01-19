@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+    integrations.discord_listener()
     yield
 
 app = FastAPI(lifespan=lifespan)
